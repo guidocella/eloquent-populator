@@ -109,13 +109,6 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertEquals($user->integer, $user->bigint);
     }
 
-    public function testCustomAttributesPassedToMake()
-    {
-        $user = $this->populator->add(User::class)->make(['email' => 'Overridden email']);
-
-        $this->assertEquals('Overridden email', $user->email);
-    }
-
     public function testModifiers()
     {
         $mock = $this->getMockBuilder('stdClass')->setMethods(['stringMethod', 'intMethod'])->getMock();
