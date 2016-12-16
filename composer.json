@@ -1,0 +1,31 @@
+{
+    "name": "guidocella/eloquent-populator",
+    "type": "library",
+    "description": "Automatically populate Eloquent models",
+    "keywords": ["laravel", "eloquent", "database", "faker"],
+    "license": "MIT",
+    "require": {
+        "php": ">=5.6.4",
+        "illuminate/database": "5.3.*",
+        "fzaninotto/faker": "^1.4",
+        "doctrine/dbal": "^2.5"
+    },
+    "require-dev": {
+        "laravel/laravel": "5.3.*",
+        "dimsav/laravel-translatable": "^6",
+        "phpunit/phpunit": "^5"
+    },
+    "autoload": {
+        "psr-4": {
+            "EloquentPopulator\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "EloquentPopulator\\": "tests"
+        }
+    }
+}
