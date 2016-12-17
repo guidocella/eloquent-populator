@@ -265,7 +265,7 @@ $factory->define(Post::class, function (Faker\Generator $faker) {
     ];
 });
 
-$post = $populator->add(Post::class, ['user_id => 1])->execute()[Post::class];
+$post = $populator->add(Post::class, ['user_id' => 1])->execute()[Post::class];
 
 $post->user_type; // The type of user 1.
 ```
