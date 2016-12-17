@@ -299,7 +299,7 @@ $users = $populator->create(User::class, 10);
 
 `$populator->create()` / `make()` can be used as an alternative to calling the helper multiple times for saving single models before or after `seed`, for example the admin user (don't try to add the same model multiple times as it will overwrite the previous one), and for Morph To and Belongs To Many relations, for which we'll see examples later.
 
-You can also pass the custom attributes or a state as the second argument of `create`, `make` or `add`.
+When creating a single a model, you can also pass custom attributes or a state as the second argument of `create`, `make` or `add`.
 
 ```php
 $populator->make(User::class, ['admin' => true]);
