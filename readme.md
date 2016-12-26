@@ -1,6 +1,6 @@
 # Eloquent Populator
 
-This package lets you populate Laravel's Eloquent ORM's models by guessing the best [Faker](https://github.com/fzaninotto/Faker) formatters for their attributes from their columns' names and types, drastically reducing the amount of code needed to seed databases and create models for testing. It is based on Faker's other ORMs' adapters, but was released as a stand-alone package because several functionalities were added.
+This is a package to populate Laravel's Eloquent ORM's models by guessing the best [Faker](https://github.com/fzaninotto/Faker) formatters for their attributes from their columns' names and types. It is based on Faker's other ORMs' adapters, but was released as a stand-alone package because several functionalities were added.
 
 # Table of contents
 
