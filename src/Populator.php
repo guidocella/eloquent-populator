@@ -242,8 +242,8 @@ class Populator
                 }
 
                 if ($createdModel->relationLoaded('translations')) {
-                    // We're not gonna use \Illuminate\Support\Collection::toArray() for the unlikely event
-                    // that the translation model has accessors to append to its array form.
+                    // We're not gonna use \Illuminate\Support\Collection::toArray(), because the
+                    // translation model could have accessors to append to its array form.
                     foreach ($createdModel->translations as $translation) {
                         $translations[$i][] = $translation->getAttributes();
                     }
