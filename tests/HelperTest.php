@@ -30,34 +30,34 @@ class HelperTest extends PopulatorTestCase
     {
         $user = populator(User::class, 'email')->make();
 
-        $this->assertEquals('State email', $user->email);
+        $this->assertSame('State email', $user->email);
     }
 
     public function testClassQuantity() {
         $users = populator(User::class, 5)->make();
 
-        $this->assertEquals(5, $users->count());
+        $this->assertSame(5, $users->count());
     }
 
     public function testClassStateQuantity()
     {
         $users = populator(User::class, 'email', 5)->make();
 
-        $this->assertEquals('State email', $users[0]->email);
-        $this->assertEquals(5, $users->count());
+        $this->assertSame('State email', $users[0]->email);
+        $this->assertSame(5, $users->count());
     }
 
     public function testPassingCustomAttributesToMake()
     {
         $user = populator(User::class)->make(['email' => 'Overridden email']);
 
-        $this->assertEquals('Overridden email', $user->email);
+        $this->assertSame('Overridden email', $user->email);
     }
 
     public function testPassingCustomAttributesToCreate()
     {
         $user = populator(User::class)->create(['email' => 'Overridden email']);
 
-        $this->assertEquals('Overridden email', $user->email);
+        $this->assertSame('Overridden email', $user->email);
     }
 }

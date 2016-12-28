@@ -53,12 +53,12 @@ class FactoryTest extends PopulatorTestCase
 
     protected function assertFactoryDefinitionsAreMerged(Product $product)
     {
-        $this->assertEquals(5, $product->price);
+        $this->assertSame(5, $product->price);
 
-        $this->assertEquals('English name', $product->name);
-        $this->assertEquals('Spanish name', $product->{'name:es'});
-        $this->assertEquals('Factory definition name', $product->{'name:es-MX'});
-        $this->assertEquals('Factory definition name', $product->{'name:es-CO'});
+        $this->assertSame('English name', $product->name);
+        $this->assertSame('Spanish name', $product->{'name:es'});
+        $this->assertSame('Factory definition name', $product->{'name:es-MX'});
+        $this->assertSame('Factory definition name', $product->{'name:es-CO'});
     }
 
     public function testMultipleFactoryStatesAreMerged()
@@ -66,12 +66,12 @@ class FactoryTest extends PopulatorTestCase
         $product = $this->populator->add(Product::class)->states('expensive', 'new')
             ->translationStates('Laravel', 'awesome')->make();
 
-        $this->assertEquals(500, $product->price);
+        $this->assertSame(500, $product->price);
         $this->assertEquals(Carbon::today(), $product->created_at);
 
-        $this->assertEquals('English name', $product->name);
-        $this->assertEquals('Laravel', $product->{'name:es-MX'});
-        $this->assertEquals('This product is awesome', $product->description);
+        $this->assertSame('English name', $product->name);
+        $this->assertSame('Laravel', $product->{'name:es-MX'});
+        $this->assertSame('This product is awesome', $product->description);
     }
 
     public function testStateWithoutDefitionIsMerged()
@@ -82,7 +82,7 @@ class FactoryTest extends PopulatorTestCase
 
         $user = $this->populator->make(User::class, 'email_state');
 
-        $this->assertEquals('state@gmail.com', $user->email);
+        $this->assertSame('state@gmail.com', $user->email);
     }
 
     /**

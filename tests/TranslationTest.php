@@ -22,7 +22,7 @@ class TranslationTest extends PopulatorTestCase
         // because if they weren't an exception would be thrown since they have no default value.
         $product = $this->populator->make(Product::class);
 
-        $this->assertEquals(['en', 'es', 'es-MX', 'es-CO'], $product->translations->pluck('locale')->all());
+        $this->assertSame(['en', 'es', 'es-MX', 'es-CO'], $product->translations->pluck('locale')->all());
     }
 
     public function testTranslateIn()
@@ -34,17 +34,17 @@ class TranslationTest extends PopulatorTestCase
 
         $models = $this->populator->execute();
 
-        $this->assertEquals(['en', 'es-MX'], $models[Product::class]->translations()->pluck('locale')->all());
+        $this->assertSame(['en', 'es-MX'], $models[Product::class]->translations()->pluck('locale')->all());
 
-        $this->assertEquals(['en'], $models[Role::class]->translations()->pluck('locale')->all());
+        $this->assertSame(['en'], $models[Role::class]->translations()->pluck('locale')->all());
     }
 
     public function testCustomTranslationAttributes_forOneLocale()
     {
         $product = $this->populator->make(Product::class, ['name' => 'English name', 'name:es' => 'Spanish name']);
 
-        $this->assertEquals('English name', $product->name);
-        $this->assertEquals('Spanish name', $product->{'name:es'});
+        $this->assertSame('English name', $product->name);
+        $this->assertSame('Spanish name', $product->{'name:es'});
         $this->assertNotEquals('English name', $product->{'name:es-MX'});
     }
 
@@ -62,9 +62,9 @@ class TranslationTest extends PopulatorTestCase
             },
         ])->create();
 
-        $this->assertEquals(1, $product->name);
-        $this->assertEquals(1, $product->{'name:es'});
-        $this->assertEquals($product->name, $product->description);
+        $this->assertSame(1, $product->name);
+        $this->assertSame(1, $product->{'name:es'});
+        $this->assertSame($product->name, $product->description);
     }
 
     public function testMakeDoesntSetForeignKeysOfTranslations()

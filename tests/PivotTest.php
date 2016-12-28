@@ -40,7 +40,7 @@ class PivotTest extends PopulatorTestCase
             ->add(Role::class, 5)
             ->create(User::class);
 
-        $this->assertEquals(5, $user->roles()->count());
+        $this->assertSame(5, $user->roles()->count());
     }
 
     public function testMorphToManyIsAssociated()
@@ -64,7 +64,7 @@ class PivotTest extends PopulatorTestCase
 
         $user = $this->populator->execute()[User::class];
 
-        $this->assertEquals(10, $user->roles()->count());
+        $this->assertSame(10, $user->roles()->count());
     }
 
     public function testAttachQuantities_withCreate()
@@ -73,7 +73,7 @@ class PivotTest extends PopulatorTestCase
             ->add(Role::class, 20)
             ->add(User::class)->attachQuantities([Role::class => 10])->create();
 
-        $this->assertEquals(10, $user->roles()->count());
+        $this->assertSame(10, $user->roles()->count());
     }
 
     public function testCustomPivotAttributes()
@@ -88,7 +88,7 @@ class PivotTest extends PopulatorTestCase
                 ],
             ])->create();
 
-        $this->assertEquals('2000-01-11', $user->roles[0]->pivot->expires_at);
+        $this->assertSame('2000-01-11', $user->roles[0]->pivot->expires_at);
     }
 
     public function testSeedRunsOneInsertPer500PivotRows()

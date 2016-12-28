@@ -19,7 +19,7 @@ class BelongsToTest extends PopulatorTestCase
 
         $phone = $this->populator->make(Phone::class);
 
-        $this->assertEquals(5, $phone->user_id);
+        $this->assertSame(5, $phone->user_id);
     }
 
     public function testExecuteWithOptionalBelongsTo()

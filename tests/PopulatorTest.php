@@ -24,8 +24,8 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertInstanceOf(Collection::class, $models[Post::class]);
         $this->assertCount(5, $models[Post::class]);
 
-        $this->assertEquals(1, User::count());
-        $this->assertEquals(5, Post::count());
+        $this->assertSame(1, User::count());
+        $this->assertSame(5, Post::count());
     }
 
     public function testCreateOne()
@@ -34,7 +34,7 @@ class PopulatorTest extends PopulatorTestCase
 
         $this->assertInstanceOf(User::class, $user);
 
-        $this->assertEquals(1, User::count());
+        $this->assertSame(1, User::count());
     }
 
     public function testCreateMany()
@@ -43,7 +43,7 @@ class PopulatorTest extends PopulatorTestCase
 
         $this->assertCount(5, $users);
 
-        $this->assertEquals(5, User::count());
+        $this->assertSame(5, User::count());
     }
 
     public function testMakeOne()
@@ -105,8 +105,8 @@ class PopulatorTest extends PopulatorTestCase
             },
         ]);
 
-        $this->assertEquals(1, $user->integer);
-        $this->assertEquals($user->integer, $user->bigint);
+        $this->assertSame(1, $user->integer);
+        $this->assertSame($user->integer, $user->bigint);
     }
 
     public function testModifiers()
@@ -163,7 +163,7 @@ class PopulatorTest extends PopulatorTestCase
             ->add(User::class)
             ->add(Video::class, 2);
 
-        $this->assertEquals(
+        $this->assertSame(
             [
                 User::class  => [1],
                 Video::class => [2, 1],
