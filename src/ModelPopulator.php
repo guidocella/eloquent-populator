@@ -495,10 +495,12 @@ class ModelPopulator
 
         $this->model = new $this->model;
 
-        // Creating the translations before filling the model allows setting
-        // custom attributes for the main model in the form of attribute:locale,
+        // Creating the translations before filling the model allows setting custom
+        // attributes for the main model in the form of attribute:locale,
         // e.g. name:de, without having them overwritten.
-        $this->translate($insertedPKs);
+        if ($this->shouldTranslate()) {
+            $this->translate($insertedPKs);
+        }
 
         $this->fillModel($this->model, $insertedPKs);
 

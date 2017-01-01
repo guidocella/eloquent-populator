@@ -76,14 +76,13 @@ trait PopulatesTranslations
     }
 
     /**
-     * Determine if a model is the main model or its translation.
+     * Determine if the model should be translated.
      *
-     * @param  Model $model
      * @return bool
      */
-    protected function isTranslation(Model $model)
+    protected function shouldTranslate()
     {
-        return $model !== $this->model;
+        return $this->locales && in_array(Translatable::class, class_uses($this->model));
     }
 
     /**
@@ -95,10 +94,6 @@ trait PopulatesTranslations
      */
     protected function translate(array $insertedPKs)
     {
-        if (!$this->shouldTranslate()) {
-            return;
-        }
-
         // We'll first set the translations relation to a new collection
         // through an instance of the translation model, just in case its newCollection() method is overridden,
         // but we're not gonna use Translatable::getNewTranslation()
@@ -129,13 +124,14 @@ trait PopulatesTranslations
     }
 
     /**
-     * Determine if the model should be translated.
+     * Determine if a model is the main model or its translation.
      *
+     * @param  Model $model
      * @return bool
      */
-    protected function shouldTranslate()
+    protected function isTranslation(Model $model)
     {
-        return $this->locales && in_array(Translatable::class, class_uses($this->model));
+        return $model !== $this->model;
     }
 
     /**
