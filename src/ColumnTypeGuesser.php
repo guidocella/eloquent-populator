@@ -44,8 +44,17 @@ class ColumnTypeGuesser
                 $maxDigits = $column->getPrecision();
                 $maxDecimalDigits = $column->getScale();
 
-                return function () use ($maxDigits, $maxDecimalDigits) {
-                    return $this->generator->randomFloat($maxDecimalDigits, 0, 10 ** ($maxDigits - $maxDecimalDigits));
+                $max = 10 ** ($maxDigits - $maxDecimalDigits);
+
+                return function () use ($maxDecimalDigits, $max) {
+                    $value = $this->generator->randomFloat($maxDecimalDigits, 0, $max);
+
+                    // Prevents "Numeric value out of range" exceptions.
+                    if ($value == $max) {
+                        return $max - (1 / $maxDecimalDigits);
+                    }
+
+                    return $value;
                 };
             case 'smallint':
                 return function () {
