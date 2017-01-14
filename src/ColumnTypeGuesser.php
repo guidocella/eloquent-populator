@@ -98,6 +98,7 @@ class ColumnTypeGuesser
                     return $this->generator->text;
                 };
             case 'datetime':
+            case 'datetimetz':
             case 'date':
             case 'time':
                 return function () {
