@@ -137,9 +137,9 @@ class Populator
     }
 
     /**
-     * Save a possible owning class for a child class in a
-     * many-to-one or one-to-one polymorphic relation with it,
-     * so that the child model may be associated to one of its owners when it is populated.
+     * Save a possible owning class for a child class in a many-to-one
+     * or one-to-one polymorphic relation with it,
+     * so that the child model will be associated to one of its owners when it is populated.
      *
      * @param  string $owningClass
      * @param  string $childClass
@@ -196,7 +196,8 @@ class Populator
         }
 
         // We'll unset the previously added models so that if, for example, the developer calls
-        // $populator->create(App\Foo::class), and then $populator->create(App\Bar::class), Foo won't be created twice.
+        // $populator->create(App\Foo::class), and then $populator->create(App\Bar::class),
+        // Foo won't be created twice.
         $this->forgetAddedModels();
 
         return $createdModels;

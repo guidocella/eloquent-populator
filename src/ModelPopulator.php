@@ -102,13 +102,13 @@ class ModelPopulator
     /**
      * ModelPopulator constructor.
      *
-     * @param Populator      $populator
-     * @param Model          $model
-     * @param Generator      $generator
-     * @param array|callable $customAttributes
-     * @param callable[]     $modifiers
-     * @param bool           $testing
-     * @param array|null     $locales
+     * @param Populator  $populator
+     * @param Model      $model
+     * @param Generator  $generator
+     * @param array      $customAttributes
+     * @param callable[] $modifiers
+     * @param bool       $testing
+     * @param array|null $locales
      */
     public function __construct(
         Populator $populator,
@@ -285,9 +285,9 @@ class ModelPopulator
     }
 
     /**
-     * Save a possible owning class for a child class in a
-     * many-to-one or one-to-one polymorphic relation with it,
-     * so that the child model may be associated to one of its owners when it is populated.
+     * Save a possible owning class for a child class in a many-to-one
+     * or one-to-one polymorphic relation with it,
+     * so that the child model will be associated to one of its owners when it is populated.
      *
      * @param  MorphOneOrMany $relation
      * @return void
@@ -363,7 +363,7 @@ class ModelPopulator
             }
         }
 
-        // Pivot tables and translations shouldn't have their foreign key associated here.
+        // Pivot tables and translations shouldn't have their foreign keys associated here.
         return $model instanceof $this->model ? $this->populateForeignKeys($formatters, $columns) : $formatters;
     }
 
@@ -525,7 +525,7 @@ class ModelPopulator
     protected function unsetTimestamps()
     {
         // Note that we can't just avoid setting the timestamps' formatters because they are needed by seed(),
-        // and when the models are added it's still unkown what method will be called.
+        // and when the models are added it's still unknown what method will be called.
         unset(
             $this->guessedFormatters[$this->model->getCreatedAtColumn()],
             $this->guessedFormatters[$this->model->getUpdatedAtColumn()]
@@ -602,7 +602,7 @@ class ModelPopulator
         // This has the added bonus over make()->getAttributes() of delaying the calling
         // of any closure in factory definitions/states, allowing them to receive the model
         // with more attributes set and the inserted primary keys as arguments,
-        // like the custom attributes passed to Populator.
+        // like the closure custom attributes passed to Populator.
         $factory = app(Eloquent\Factory::class);
 
         $states = $this->isTranslation($model) ? $this->translationStates : $this->states;
@@ -719,7 +719,8 @@ class ModelPopulator
 
         $this->testing = true;
 
-        // This condition prevents the overwriting of any custom attribute passed to add().
+        // This condition prevents the overwriting of the custom attributes
+        // thay may have been passed to add().
         if ($customAttributes) {
             $this->customAttributes = $customAttributes;
         }
@@ -757,9 +758,8 @@ class ModelPopulator
     public function getOwners()
     {
         $belongsToRelations = array_filter($this->belongsToRelations(), function ($relation) {
-            return
-                // Rejects the relations whose foreign keys have been passed as custom attributes.
-                !array_key_exists($relation->getForeignKey(), $this->customAttributes)
+            // Rejects the relations whose foreign keys have been passed as custom attributes.
+            return !array_key_exists($relation->getForeignKey(), $this->customAttributes)
                 && !array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
 
                 // And the relations of the model to itself to prevent infinite recursion.
@@ -772,7 +772,7 @@ class ModelPopulator
     }
 
     /**
-     * Determine if populator is in testing mode.
+     * Determine if Populator is in testing mode.
      *
      * @return bool
      */
