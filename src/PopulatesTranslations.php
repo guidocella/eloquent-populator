@@ -107,8 +107,8 @@ trait PopulatesTranslations
         if ($this->guessedTranslationFormatters === []) {
             $this->guessedTranslationFormatters = $this->guessColumnFormatters($translationModel);
 
-            // We'll unset the foreign key formatter so the attribute won't be
-            // set to random number which would remain the model with make().
+            // We'll unset the foreign key formatter so the attribute won't be set to
+            // a random number which would never be overwritten when make() is used.
             unset($this->guessedTranslationFormatters[$this->model->getRelationKey()]);
         }
 
