@@ -74,7 +74,7 @@ class ColumnTypeGuesser
 
                 // If Faker's text() $maxNbChars argument is greater than 99,
                 // the text it generates can have new lines which are ignored by non-textarea inputs
-                // and break tests, so we'll limit the size to 99.
+                // and break WebDriver tests, so we'll limit the size to 99.
                 if ($size > 99) {
                     $size = 99;
                 }
