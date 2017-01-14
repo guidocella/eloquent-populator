@@ -68,18 +68,18 @@ class PopulatorTest extends PopulatorTestCase
     {
         $user = $this->populator->make(User::class);
 
-        $this->assertInternalType('bool', $user->boolean);
-        $this->assertInternalType('float', $user->decimal);
         $this->assertInternalType('int', $user->smallint);
         $this->assertInternalType('int', $user->integer);
         $this->assertInternalType('int', $user->bigint);
+        $this->assertInternalType('float', $user->decimal);
         $this->assertInternalType('float', $user->float);
         $this->assertTrue(is_string($user->string) && strlen($user->string));
         $this->assertTrue(is_string($user->text) && strlen($user->text));
-        $this->assertInstanceOf(Carbon::class, $user->datetime);
         $this->assertInstanceOf(Carbon::class, $user->date);
+        $this->assertInstanceOf(Carbon::class, $user->datetime);
         $this->assertInstanceOf(Carbon::class, $user->time);
         $this->assertInstanceOf(Carbon::class, $user->timestamp);
+        $this->assertInternalType('bool', $user->boolean);
 
         // DATETIME-TZ, JSON and UUID are not supported by SQLite, so there's no point in testing them.
     }

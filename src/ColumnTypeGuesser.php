@@ -37,27 +37,6 @@ class ColumnTypeGuesser
     public function guessFormat(Column $column, $tableName)
     {
         switch ($column->getType()->getName()) {
-            case 'boolean':
-                return function () {
-                    return $this->generator->boolean;
-                };
-            // Sadly Doctrine maps all TINYINT to BooleanType.
-            case 'decimal':
-                $maxDigits = $column->getPrecision();
-                $maxDecimalDigits = $column->getScale();
-
-                $max = 10 ** ($maxDigits - $maxDecimalDigits);
-
-                return function () use ($maxDecimalDigits, $max) {
-                    $value = $this->generator->randomFloat($maxDecimalDigits, 0, $max);
-
-                    // Prevents "Numeric value out of range" exceptions.
-                    if ($value == $max) {
-                        return $max - (1 / $maxDecimalDigits);
-                    }
-
-                    return $value;
-                };
             case 'smallint':
                 return function () {
                     return mt_rand(0, 65535);
@@ -73,6 +52,22 @@ class ColumnTypeGuesser
             case 'float':
                 return function () {
                     return mt_rand(0, intval('4294967295')) / mt_rand(1, intval('4294967295'));
+                };
+            case 'decimal':
+                $maxDigits = $column->getPrecision();
+                $maxDecimalDigits = $column->getScale();
+
+                $max = 10 ** ($maxDigits - $maxDecimalDigits);
+
+                return function () use ($maxDecimalDigits, $max) {
+                    $value = $this->generator->randomFloat($maxDecimalDigits, 0, $max);
+
+                    // Prevents "Numeric value out of range" exceptions.
+                    if ($value == $max) {
+                        return $max - (1 / $maxDecimalDigits);
+                    }
+
+                    return $value;
                 };
             case 'string':
                 $size = $column->getLength() ?: 60;
@@ -99,17 +94,22 @@ class ColumnTypeGuesser
                 return function () {
                     return $this->generator->text;
                 };
-            case 'datetime':
-            case 'datetimetz':
-            case 'date':
-            case 'time':
-                return function () {
-                    return Carbon::instance($this->generator->datetime);
-                };
             case 'guid':
                 return function () {
                     return $this->generator->uuid;
                 };
+            case 'date':
+            case 'datetime':
+            case 'datetimetz':
+            case 'time':
+                return function () {
+                    return Carbon::instance($this->generator->datetime);
+                };
+            case 'boolean':
+                return function () {
+                    return $this->generator->boolean;
+                };
+                // Sadly Doctrine maps all TINYINT to BooleanType.
             case 'json':
             case 'json_array':
                 return function () {
