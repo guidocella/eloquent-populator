@@ -81,7 +81,7 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertInstanceOf(Carbon::class, $user->time);
         $this->assertInstanceOf(Carbon::class, $user->timestamp);
 
-        // DATETIME-TZ is not supported by SQLite, so there's no point in testing it.
+        // DATETIME-TZ and UUID are not supported by SQLite, so there's no point in testing them.
     }
 
     public function testColumnNameGuesser()

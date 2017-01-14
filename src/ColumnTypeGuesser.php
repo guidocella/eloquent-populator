@@ -104,6 +104,10 @@ class ColumnTypeGuesser
                 return function () {
                     return Carbon::instance($this->generator->datetime);
                 };
+            case 'guid':
+                return function () {
+                    return $this->generator->uuid;
+                };
             default:
                 // No smart way to guess what the user expects here.
                 return null;
