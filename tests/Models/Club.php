@@ -9,5 +9,8 @@ class Club extends Model
 {
     use SoftDeletes;
 
-    protected $dates = ['deleted_at'];
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
 }

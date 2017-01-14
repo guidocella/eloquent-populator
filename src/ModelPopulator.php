@@ -93,7 +93,7 @@ class ModelPopulator
     protected $states = [];
 
     /**
-     * The PivotPopulator instances of this model's BelongsToMany relations.
+     * The PivotPopulator instances of the model's BelongsToMany relations.
      *
      * @var PivotPopulator[]
      */
@@ -756,10 +756,14 @@ class ModelPopulator
      */
     public function getOwners()
     {
-        // Rejects the relations whose foreign keys have been passed as custom attributes.
         $belongsToRelations = array_filter($this->belongsToRelations(), function ($relation) {
-            return !array_key_exists($relation->getForeignKey(), $this->customAttributes) &&
-                !array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model));
+            return
+                // Rejects the relations whose foreign keys have been passed as custom attributes.
+                !array_key_exists($relation->getForeignKey(), $this->customAttributes)
+                && !array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
+
+                // And the relations of the model to itself to prevent infinite recursion.
+                && !($relation->getRelated() instanceof $this->model);
         });
 
         return array_map(function ($relation) {

@@ -2,6 +2,7 @@
 
 namespace EloquentPopulator;
 
+use EloquentPopulator\Models\Club;
 use EloquentPopulator\Models\Comment;
 use EloquentPopulator\Models\Company;
 use EloquentPopulator\Models\Country;
@@ -64,6 +65,15 @@ class BelongsToTest extends PopulatorTestCase
         $this->populator->make(Post::class);
 
         $this->assertFalse(User::exists());
+    }
+
+    public function testSelfReferentialBelongsTo()
+    {
+        $clubs = $this->populator->create(Club::class, 2);
+
+        $this->assertNull($clubs[0]->parent_id);
+
+        $this->assertSame(1, $clubs[1]->parent_id);
     }
 
     public function testAssociatingMorphTo()
