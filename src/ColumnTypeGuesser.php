@@ -72,6 +72,13 @@ class ColumnTypeGuesser
             case 'string':
                 $size = $column->getLength() ?: 60;
 
+                // If Faker's text() $maxNbChars argument is greater than 99,
+                // the text it generates can have new lines which are ignored by non-textarea inputs
+                // and break tests, so we'll limit the size to 99.
+                if ($size > 99) {
+                    $size = 99;
+                }
+
                 return function () use ($size, $column, $tableName) {
                     if ($size >= 5) {
                         return $this->generator->text($size);

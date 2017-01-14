@@ -48,7 +48,7 @@ $populator
     ->add(Post::class, 5);
 ```
 
-Populator will try to guess the best Faker formatter to use for each column based on its name. For example, if a column is called `first_name`, it will use `$faker->firstName`. If unable to guess by the column's name, it will guess the formatter by the column's type. For example, it will use `$faker->text(255)` for a `VARCHAR(255)` column, or a Carbon instance for a `TIMESTAMP`.
+Populator will try to guess the best Faker formatter to use for each column based on its name. For example, if a column is called `first_name`, it will use `$faker->firstName`. If unable to guess by the column's name, it will guess the formatter by the column's type. For example, it will use `$faker->text` for a `VARCHAR` column, or a Carbon instance for a `TIMESTAMP`.
 
 To customize the values of certain columns, pass them as the 3rd argument. If they're Faker formatters, you'll have to wrap them in a closure to get different values for each row.
 
