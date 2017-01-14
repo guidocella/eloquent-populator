@@ -13,13 +13,13 @@ class PivotTest extends PopulatorTestCase
 {
     public function testExecuteAssociatesRandomQuantityOfManyToManyRelated()
     {
-        // Will fail if the count of the attached records happens to be 0 or 100.
+        // Will fail if the count of the attached records happens to be 0 or 200.
         //
         // This also tests that the extra column "expires_at" is automatically populated,
         // because if it wasn't an exception would be thrown since it has no default value.
 
         $this->populator
-            ->add(Role::class, 100)
+            ->add(Role::class, 200)
             // Adds 2 users in case something wrong happens with multiple ones.
             ->add(User::class, 2);
 
@@ -29,7 +29,7 @@ class PivotTest extends PopulatorTestCase
             $user->roles()->count(),
             $this->logicalAnd(
                 $this->greaterThan(0),
-                $this->lessThan(100)
+                $this->lessThan(200)
             )
         );
     }
