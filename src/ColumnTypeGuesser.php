@@ -31,6 +31,8 @@ class ColumnTypeGuesser
      * @param  Column $column
      * @param  string $tableName
      * @return \Closure|null
+     *
+     * @throws \InvalidArgumentException
      */
     public function guessFormat(Column $column, $tableName)
     {
@@ -39,7 +41,7 @@ class ColumnTypeGuesser
                 return function () {
                     return $this->generator->boolean;
                 };
-                // Sadly Doctrine maps all TINYINT to BooleanType.
+            // Sadly Doctrine maps all TINYINT to BooleanType.
             case 'decimal':
                 $maxDigits = $column->getPrecision();
                 $maxDecimalDigits = $column->getScale();
@@ -107,6 +109,11 @@ class ColumnTypeGuesser
             case 'guid':
                 return function () {
                     return $this->generator->uuid;
+                };
+            case 'json':
+            case 'json_array':
+                return function () {
+                    return json_encode([$this->generator->word => $this->generator->word]);
                 };
             default:
                 // No smart way to guess what the user expects here.
