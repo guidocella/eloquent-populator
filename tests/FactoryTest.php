@@ -16,7 +16,7 @@ class FactoryTest extends PopulatorTestCase
 
         parent::setUpLocales();
 
-        app(Eloquent\Factory::class)
+        $this->app[Eloquent\Factory::class]
             ->define(Product::class, function () {
                 return ['price' => 5, 'name' => 'English name', 'name:es' => 'Spanish name'];
             })
@@ -76,7 +76,7 @@ class FactoryTest extends PopulatorTestCase
 
     public function testStateWithoutDefitionIsMerged()
     {
-        app(Eloquent\Factory::class)->state(User::class, 'email_state', function () {
+        $this->app[Eloquent\Factory::class]->state(User::class, 'email_state', function () {
             return ['email' => 'state@gmail.com'];
         });
 

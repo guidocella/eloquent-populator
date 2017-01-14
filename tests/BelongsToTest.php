@@ -58,7 +58,7 @@ class BelongsToTest extends PopulatorTestCase
 
     public function testMakeAndCreateCreateDontCreateOwner_ifForeignKeyIsInFactoryDefinition()
     {
-        app(Eloquent\Factory::class)->define(Post::class, function () {
+        $this->app[Eloquent\Factory::class]->define(Post::class, function () {
             return ['user_id' => null];
         });
 

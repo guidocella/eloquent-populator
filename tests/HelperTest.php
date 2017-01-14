@@ -11,7 +11,7 @@ class HelperTest extends PopulatorTestCase
     {
         parent::setUp();
 
-        app(Eloquent\Factory::class)->state(User::class, 'email', function () {
+        $this->app[Eloquent\Factory::class]->state(User::class, 'email', function () {
             return ['email' => 'State email'];
         });
     }
