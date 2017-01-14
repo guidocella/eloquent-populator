@@ -34,14 +34,4 @@ class CreateUsersTable extends Migration
             $table->foreign('company_id')->references('id')->on('companies');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::drop('users');
-    }
 }

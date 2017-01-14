@@ -21,14 +21,4 @@ class CreateRoleUserTable extends Migration
             $table->timestamp('expires_at');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::drop('role_user');
-    }
 }

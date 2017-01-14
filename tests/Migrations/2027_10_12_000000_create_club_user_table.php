@@ -20,14 +20,4 @@ class CreateClubUserTable extends Migration
             $table->foreign('club_id')->references('id')->on('clubs');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::drop('club_user');
-    }
 }

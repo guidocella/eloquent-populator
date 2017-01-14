@@ -22,14 +22,4 @@ class CreateProductTranslationsTable extends Migration
             $table->string('locale');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::drop('products');
-    }
 }

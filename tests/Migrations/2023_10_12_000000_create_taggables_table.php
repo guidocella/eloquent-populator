@@ -20,14 +20,4 @@ class CreateTaggablesTable extends Migration
             $table->string('extra');
         });
     }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::drop('taggables');
-    }
 }
