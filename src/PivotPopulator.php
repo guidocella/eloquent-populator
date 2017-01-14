@@ -31,7 +31,7 @@ class PivotPopulator
     protected $relation;
 
     /**
-     * The related class.
+     * The class name of the related model.
      *
      * @var string
      */
@@ -81,7 +81,7 @@ class PivotPopulator
 
     /**
      * Unset the closures that have been associated to the foreign keys by ColumnTypeGuesser,
-     * so that attach() will set them automatically to the correct values.
+     * so that attach() will set them to the correct values automatically.
      *
      * @param  array $guessedFormatters
      * @return array The formatters.
@@ -90,9 +90,9 @@ class PivotPopulator
     {
         // Removes the table name from the foreign keys.
         $foreignKey = last(explode('.', $this->relation->getForeignKey()));
-        $otherKey = last(explode('.', $this->relation->getOtherKey()));
+        $relatedKey = last(explode('.', $this->relation->getOtherKey()));
 
-        unset($guessedFormatters[$foreignKey], $guessedFormatters[$otherKey]);
+        unset($guessedFormatters[$foreignKey], $guessedFormatters[$relatedKey]);
 
         // If we're dealing with an inverse MorphToMany relation, we'll unset the morph type as well.
         if ($this->relation instanceof MorphToMany) {
@@ -237,15 +237,15 @@ class PivotPopulator
         $bulkInsertRecords = [];
 
         foreach ($this->pickRelatedIds($insertedPKs) as $relatedId) {
-            $otherKey = last(explode('.', $this->relation->getOtherKey()));
+            $relatedKey = last(explode('.', $this->relation->getOtherKey()));
 
-            $otherKeyArray = [$otherKey => $relatedId];
+            $relatedKeyArray = [$relatedKey => $relatedId];
 
             if ($this->relation instanceof MorphToMany) {
-                $otherKeyArray[$this->relation->getMorphType()] = $this->relation->getRelated()->getMorphClass();
+                $relatedKeyArray[$this->relation->getMorphType()] = $this->relation->getRelated()->getMorphClass();
             }
 
-            $bulkInsertRecords[] = array_merge($otherKeyArray, $this->getExtraAttributes($insertedPKs, $currentParent));
+            $bulkInsertRecords[] = array_merge($relatedKeyArray, $this->getExtraAttributes($insertedPKs, $currentParent));
         }
 
         // A model's inverse MorphToMany relations use the same pivot table,
