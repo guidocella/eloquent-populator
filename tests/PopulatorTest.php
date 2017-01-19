@@ -43,7 +43,7 @@ class PopulatorTest extends PopulatorTestCase
 
         $this->assertCount(5, $users);
 
-        $this->assertSame(5, User::count());
+        $this->assertCount(5, $users);
     }
 
     public function testMakeOne()

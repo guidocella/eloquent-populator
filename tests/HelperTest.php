@@ -36,7 +36,7 @@ class HelperTest extends PopulatorTestCase
     public function testClassQuantity() {
         $users = populator(User::class, 5)->make();
 
-        $this->assertSame(5, $users->count());
+        $this->assertCount(5, $users);
     }
 
     public function testClassStateQuantity()
@@ -44,7 +44,7 @@ class HelperTest extends PopulatorTestCase
         $users = populator(User::class, 'email', 5)->make();
 
         $this->assertSame('State email', $users[0]->email);
-        $this->assertSame(5, $users->count());
+        $this->assertCount(5, $users);
     }
 
     public function testPassingCustomAttributesToMake()
