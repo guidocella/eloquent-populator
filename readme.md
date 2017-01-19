@@ -43,9 +43,8 @@ $populator = populator();
 Now for each model you want to create, call `add` passing the class and the number of instances to generate. Let's add 10 users and 5 posts.
 
 ```php
-$populator
-    ->add(User::class, 10)
-    ->add(Post::class, 5);
+$populator->add(User::class, 10)
+          ->add(Post::class, 5);
 ```
 
 Populator will try to guess the best Faker formatter to use for each column based on its name. For example, if a column is called `first_name`, it will use `$faker->firstName`. If unable to guess by the column's name, it will guess the formatter by the column's type. For example, it will use `$faker->text` for a `VARCHAR` column, or a Carbon instance for a `TIMESTAMP`.
@@ -107,9 +106,8 @@ If a model shares a relationship with another one that was previously added, Pop
 If a model belongs to another one that was added before it, Populator will associate the child model to a random one of its potential owners.
 
 ```php
-$populator
-    ->add(User::class, 5)
-    ->add(Phone::class);
+$populator->add(User::class, 5)
+          ->add(Phone::class);
 
 $phone = $populator->execute()[Phone::class];
 
@@ -123,9 +121,8 @@ If a foreign key is nullable, Populator will make its formatter optional.
 ```php
 // Assume that posts.user_id is nullable.
 
-$populator
-    ->add(User::class, 5)
-    ->add(Post::class);
+$populator->add(User::class, 5)
+          ->add(Post::class);
 
 $post = $populator->execute()[Post::class];
 
@@ -147,10 +144,9 @@ $populator->add(Post::class, function ($faker, $insertedPKs) {
 If a model has a Morph To relation to models that were added before it, Populator will associate it to a random one of them.
 
 ```php
-$populator
-    ->add(Post::class, 5)
-    ->add(Video::class, 5)
-    ->add(Comment::class);
+$populator->add(Post::class, 5)
+          ->add(Video::class, 5)
+          ->add(Comment::class);
 
 $comment = $populator->execute()[Comment::class];
 
@@ -164,9 +160,8 @@ Associating multiple Morph To relations on a single model is currently not suppo
 If a model has a Belongs To Many or inverse Morph To Many relation to another one that has already been added, by default Populator will attach a number between 0 and the related model's quantity of the related model's instances to it.
 
 ```php
-$populator
-    ->add(Role::class, 5)
-    ->add(User::class);
+$populator->add(Role::class, 5)
+          ->add(User::class);
 
 $user = $populator->execute()[User::class];
 
@@ -186,9 +181,8 @@ $populator->add(User::class)->attachQuantites([Role::class => 5, Club::class => 
 Any extra column on pivot tables will have its formatter guessed and be populated.
 
 ```php
-$populator
-    ->add(Role::class, 5)
-    ->add(User::class);
+$populator->add(Role::class, 5)
+          ->add(User::class);
 
 $user = $populator->execute()[User::class];
 
@@ -214,10 +208,9 @@ $populator->add(User::class)->pivotAttributes([
 To run only one insert per 500 rows of every model, call `seed` instead of `execute` (the chunking in blocks of 500 rows is because SQL limits how many rows you can insert at once).
 
 ```php
-$populator
-   ->add(User::class, 10000)
-   ->add(Post::class, 10000)
-   ->seed();
+$populator->add(User::class, 10000)
+          ->add(Post::class, 10000)
+          ->seed();
 ```
 
 `seed` returns the inserted primary keys.
@@ -378,15 +371,14 @@ $user->roles->count(); // 20.
 You can call setters before `create` like this:
 
 ```php
-$user = populator()
-    ->add(Role::class, 20)
-    ->add(User::class)
-        ->pivotAttributes([
-            Role::class => [
-                'expires_at' => Carbon::now()
-            ]
-        ])
-        ->create();
+$user = populator()->add(Role::class, 20)
+                   ->add(User::class)
+                        ->pivotAttributes([
+                            Role::class => [
+                                'expires_at' => Carbon::now()
+                            ]
+                        ])
+                        ->create();
 ```
 
 ## Custom generator
@@ -431,12 +423,11 @@ $product->translations; // Only the English translation.
 Calling `translateIn` on Populator sets the default locales, but you can also chain it from `add` to set the locales only for a certain model. 
 
 ```php
-$populator
-    ->translateIn([])
-    ->add(Product) // No ProductTranslation will be created.
-    ->add(Role::class)
-        ->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
-        ->execute();
+$populator->translateIn([])
+          ->add(Product) // No ProductTranslation will be created.
+          ->add(Role::class)
+              ->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
+              ->execute();
 ```
 
 ### Overriding translation formatters
