@@ -50,7 +50,6 @@ class PivotPopulator
      * @var (\Closure|null)[]
      */
     protected $guessedFormatters = [];
-
     /**
      * Custom attributes for the pivot table.
      *
@@ -88,11 +87,7 @@ class PivotPopulator
      */
     protected function unsetForeignKeys(array $guessedFormatters)
     {
-        // Removes the table name from the foreign keys.
-        $foreignKey = last(explode('.', $this->relation->getForeignKey()));
-        $relatedKey = last(explode('.', $this->relation->getOtherKey()));
-
-        unset($guessedFormatters[$foreignKey], $guessedFormatters[$relatedKey]);
+        unset($guessedFormatters[$this->getForeignKeyName()], $guessedFormatters[$this->getRelatedKeyName()]);
 
         // If we're dealing with an inverse MorphToMany relation, we'll unset the morph type as well.
         if ($this->relation instanceof MorphToMany) {
@@ -100,6 +95,34 @@ class PivotPopulator
         }
 
         return $guessedFormatters;
+    }
+
+    /**
+     * Get the foreign key for the relation.
+     *
+     * @return string
+     */
+    protected function getForeignKeyName()
+    {
+        $method = method_exists($this->relation, 'getQualifiedForeignKeyName')
+            ? 'getQualifiedForeignKeyName' // Laravel >=5.4
+            : 'getForeignKey';
+
+        return last(explode('.', $this->relation->$method()));
+    }
+
+    /**
+     * Get the "related key" for the relation.
+     *
+     * @return string
+     */
+    protected function getRelatedKeyName()
+    {
+        $method = method_exists($this->relation, 'getQualifiedRelatedKeyName')
+            ? 'getQualifiedRelatedKeyName' // Laravel >=5.4
+            : 'getOtherKey';
+
+        return last(explode('.', $this->relation->$method()));
     }
 
     /**
@@ -232,14 +255,10 @@ class PivotPopulator
     {
         $table = $this->relation->getTable();
 
-        $foreignKey = last(explode('.', $this->relation->getForeignKey()));
-
         $bulkInsertRecords = [];
 
         foreach ($this->pickRelatedIds($insertedPKs) as $relatedId) {
-            $relatedKey = last(explode('.', $this->relation->getOtherKey()));
-
-            $relatedKeyArray = [$relatedKey => $relatedId];
+            $relatedKeyArray = [$this->getRelatedKeyName() => $relatedId];
 
             if ($this->relation instanceof MorphToMany) {
                 $relatedKeyArray[$this->relation->getMorphType()] = $this->relation->getRelated()->getMorphClass();
@@ -250,6 +269,6 @@ class PivotPopulator
 
         // A model's inverse MorphToMany relations use the same pivot table,
         // so we have to return the related class as well to differentiate them.
-        return [$this->relatedClass, $table, $bulkInsertRecords, $foreignKey];
+        return [$this->relatedClass, $table, $bulkInsertRecords, $this->getForeignKeyName()];
     }
 }
