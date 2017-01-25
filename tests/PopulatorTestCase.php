@@ -5,7 +5,6 @@ namespace EloquentPopulator;
 use EloquentPopulator\Models\Video;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use EloquentPopulator\ClassFinder;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\TestCase;
 
