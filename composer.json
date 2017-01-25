@@ -11,7 +11,7 @@
         "doctrine/dbal": "^2.5"
     },
     "require-dev": {
-        "laravel/laravel": "5.3.*",
+        "laravel/laravel": "5.4.*",
         "dimsav/laravel-translatable": "^6",
         "phpunit/phpunit": "^5"
     },

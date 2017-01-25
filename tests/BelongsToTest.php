@@ -32,7 +32,7 @@ class BelongsToTest extends PopulatorTestCase
         $posts = $this->populator->execute()[Post::class];
 
         $this->assertTrue($posts->contains('user_id', null));
-        $this->assertFalse($posts->where('user_id', '!=', null)->isEmpty());
+        $this->assertTrue($posts->where('user_id', '!=', null)->isNotEmpty());
     }
 
     public function testMakeAndCreateCreateOwnerifForeignKeyIsNotNullable()
@@ -89,7 +89,7 @@ class BelongsToTest extends PopulatorTestCase
         // Tests that the comments haven't all been assigned the same morph type,
         // and that the morph map's custom name was used.
         $this->assertTrue($comments->contains('commentable_type', Post::class));
-        $this->assertFalse($comments->where('commentable_type', 'videos')->isEmpty());
+        $this->assertTrue($comments->where('commentable_type', 'videos')->isNotEmpty());
     }
 
     public function testSeedAssociatesAutoIncrementPrimaryKeys()
