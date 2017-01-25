@@ -32,7 +32,14 @@ composer update
 
 ## Usage
 
-Populator ships with a `populator` helper. Call it with no arguments to get a Populator instance.
+Either type hint `EloquentPopulator\Populator` in your `DatabaseSeeder`'s `run` method to have it dependency injected if you're using Laravel 5.4+
+
+```php
+public function run(EloquentPopulator\Populator $populator)
+{
+```
+
+or call the `populator` helper with no arguments to get a Populator instance.
 
 ```php
 $populator = populator();
