@@ -5,7 +5,6 @@ namespace EloquentPopulator;
 use EloquentPopulator\Models\Video;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\TestCase;
 
 abstract class PopulatorTestCase extends TestCase
@@ -38,14 +37,16 @@ abstract class PopulatorTestCase extends TestCase
     {
         parent::setUp();
 
-        $this->app['config']->set('database.default', 'sqlite');
-        $this->app['config']->set('database.connections.sqlite.database', ':memory:');
+        $this->app['config']->set([
+            'database.default'                     => 'sqlite',
+            'database.connections.sqlite.database' => ':memory:',
+        ]);
 
         $this->migrate();
 
         Relation::morphMap(['videos' => Video::class]);
 
-        $this->populator = populator();
+        $this->populator = $this->app[Populator::class];
     }
 
     /**
@@ -55,23 +56,23 @@ abstract class PopulatorTestCase extends TestCase
      */
     protected function migrate()
     {
-        $fileSystem = new Filesystem;
-        $classFinder = new ClassFinder;
+        $migrator = $this->app['migrator'];
 
-        foreach ($fileSystem->files(__DIR__ . '/Migrations') as $file) {
-            $fileSystem->requireOnce($file);
-            $migrationClass = $classFinder->findClass($file);
+        foreach ($migrator->getMigrationFiles(__DIR__ . '/Migrations') as $file) {
+            require_once $file;
 
-            (new $migrationClass)->up();
+            ($migrator->resolve($migrator->getMigrationName($file)))->up();
         }
     }
 
     protected function setUpLocales()
     {
-        $this->app['config']->set('translatable.locales', ['en', 'es' => ['MX', 'CO']]);
-        $this->app['config']->set('translatable.locale_separator', '-');
+        $this->app['config']->set([
+            'translatable.locales'          => ['en', 'es' => ['MX', 'CO']],
+            'translatable.locale_separator' => '-',
+        ]);
 
         // Reinstantiates Populator to test that it defaults to the configured locales.
-        $this->populator = populator();
+        $this->populator = $this->app[Populator::class];
     }
 }
