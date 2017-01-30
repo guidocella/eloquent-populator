@@ -260,8 +260,11 @@ class Populator
             if (!isset($insertedPKs[$model])) {
                 $primaryKeyName = $createdModel->getKeyName();
 
-                $insertedPKs[$model] = $createdModel->take(count($attributes))->latest($primaryKeyName)
-                    ->pluck($primaryKeyName)->all();
+                $insertedPKs[$model] = $createdModel->withoutGlobalScopes()
+                                                    ->take(count($attributes))
+                                                    ->latest($primaryKeyName)
+                                                    ->pluck($primaryKeyName)
+                                                    ->all();
             }
 
             $this->insertPivotRecords(
