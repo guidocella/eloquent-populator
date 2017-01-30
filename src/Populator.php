@@ -256,15 +256,8 @@ class Populator
                 $createdModel->insert($chunk);
             }
 
-            // If the primary key is auto incremented, we'll fetch the IDs of the rows that were just inserted.
             if (!isset($insertedPKs[$model])) {
-                $primaryKeyName = $createdModel->getKeyName();
-
-                $insertedPKs[$model] = $createdModel->withoutGlobalScopes()
-                                                    ->take(count($attributes))
-                                                    ->latest($primaryKeyName)
-                                                    ->pluck($primaryKeyName)
-                                                    ->all();
+                $insertedPKs[$model] = $this->getInsertedPKs($createdModel, count($attributes));
             }
 
             $this->insertPivotRecords(
@@ -281,6 +274,24 @@ class Populator
         $this->forgetAddedModels();
 
         return $insertedPKs;
+    }
+
+    /**
+     * Get the auto increment primary keys that were inserted by seed().
+     *
+     * @param  Model $createdModel
+     * @param  int   $insertedCount
+     * @return array
+     */
+    protected function getInsertedPKs(Model $createdModel, $insertedCount)
+    {
+        $primaryKeyName = $createdModel->getKeyName();
+
+        return $createdModel->withoutGlobalScopes()
+                            ->take($insertedCount)
+                            ->latest($primaryKeyName)
+                            ->pluck($primaryKeyName)
+                            ->all();
     }
 
     /**
