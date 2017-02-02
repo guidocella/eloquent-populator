@@ -363,7 +363,7 @@ Or even:
 $comment = populator(Post::class)->make(Comment::class);
 ```
 
-Notice how even if `make` and `create` are chained from `add` or the helper with a class passed, if the first argument is a string, Populator interprets it as a different model class to create rather than the one that was just added, and redirects the call to the `EloquentPopulator\Populator` versions of these methods. This way you can easily populate Morph To and Belongs To Many relations in one line.
+Notice how even if `make` and `create` are chained from `add` or the helper with a class passed, if the first argument is a string, Populator interprets it as a different model class to create rather than the one that was just added, and redirects the call to the `EloquentPopulator\Populator` versions of these methods. This way you can easily populate Morph To and Belongs To Many relations in one line, or specify custom attributes of a parent model before creating its child.
 
 #### Belongs To Many
 
