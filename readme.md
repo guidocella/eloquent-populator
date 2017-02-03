@@ -309,6 +309,14 @@ $populator->make(User::class, ['admin' => true]);
 $populator->create(User::class, 'admin', $otherAttributes);
 ```
 
+Furthermore, you can call `raw` to `make` a model and convert it to an array.
+
+```php
+$user = $populator->raw(User::class, ['name' => 'foo']);
+
+$user['name']; // "foo"
+```
+
 ### Relations
 
 `create` and `make` change how relations are associated.

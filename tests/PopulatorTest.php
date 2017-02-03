@@ -28,6 +28,24 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertSame(5, Post::count());
     }
 
+    public function testMakeOne()
+    {
+        $user = $this->populator->make(User::class);
+
+        $this->assertInstanceOf(User::class, $user);
+
+        $this->assertFalse(User::exists());
+    }
+
+    public function testMakeMany()
+    {
+        $users = $this->populator->make(User::class, 5);
+
+        $this->assertCount(5, $users);
+
+        $this->assertFalse(User::exists());
+    }
+
     public function testCreateOne()
     {
         $user = $this->populator->create(User::class);
@@ -46,18 +64,20 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertCount(5, $users);
     }
 
-    public function testMakeOne()
+    public function testRawOne()
     {
-        $user = $this->populator->make(User::class);
+        $user = $this->populator->raw(User::class);
 
-        $this->assertInstanceOf(User::class, $user);
+        $this->assertInternalType('array', $user);
 
         $this->assertFalse(User::exists());
     }
 
-    public function testMakeMany()
+    public function testRawMany()
     {
-        $users = $this->populator->make(User::class, 5);
+        $users = $this->populator->raw(User::class, 5);
+
+        $this->assertInternalType('array', $users);
 
         $this->assertCount(5, $users);
 

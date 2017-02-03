@@ -688,6 +688,18 @@ class ModelPopulator
     }
 
     /**
+     * Create the given model and convert it to an array.
+     *
+     * @param  array $customAttributes Custom attributes that will override the guessed formatters.
+     * @return array
+     */
+    public function raw($customAttributes = [])
+    {
+        // We actually need to make() the model first since closures attributes receive the model instance.
+        return $this->make($customAttributes)->toArray();
+    }
+
+    /**
      * Create an instance of the given model and persist it to the database.
      *
      * @param  array $customAttributes Custom attributes that will override the guessed formatters.

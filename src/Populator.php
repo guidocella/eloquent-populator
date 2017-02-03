@@ -423,6 +423,25 @@ class Populator
     }
 
     /**
+     * Create $quantity instances of the given model and convert them to arrays.
+     * The second argument can be either the quantity, custom attributes or a state.
+     *
+     * @param  string           $modelClass       The class name of the Eloquent model to create.
+     * @param  int|array|string $quantity         The number of models to populate.
+     * @param  array            $customAttributes Custom attributes that will override the guessed formatters.
+     * @param  array            $modifiers        Functions to call before the model is saved.
+     * @return array
+     */
+    public function raw(
+        $modelClass,
+        $quantity = 1,
+        array $customAttributes = [],
+        array $modifiers = []
+    ) {
+        return $this->add($modelClass, $quantity, $customAttributes, $modifiers)->raw();
+    }
+
+    /**
      * Set the locales in which to create translations.
      *
      * @param  array $locales
