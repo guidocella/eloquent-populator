@@ -21,10 +21,11 @@ class PopulatorTest extends PopulatorTestCase
         $models = $this->populator->execute();
 
         $this->assertInstanceOf(Model::class, $models[User::class]);
-        $this->assertInstanceOf(Collection::class, $models[Post::class]);
-        $this->assertCount(5, $models[Post::class]);
-
         $this->assertSame(1, User::count());
+
+        $this->assertInstanceOf(Collection::class, $models[Post::class]);
+        $this->assertContainsOnlyInstancesOf(Post::class, $models[Post::class]);
+        $this->assertCount(5, $models[Post::class]);
         $this->assertSame(5, Post::count());
     }
 
@@ -40,6 +41,10 @@ class PopulatorTest extends PopulatorTestCase
     public function testMakeMany()
     {
         $users = $this->populator->make(User::class, 5);
+
+        $this->assertInstanceOf(Collection::class, $users);
+
+        $this->assertContainsOnlyInstancesOf(User::class, $users);
 
         $this->assertCount(5, $users);
 
@@ -59,9 +64,13 @@ class PopulatorTest extends PopulatorTestCase
     {
         $users = $this->populator->create(User::class, 5);
 
-        $this->assertCount(5, $users);
+        $this->assertInstanceOf(Collection::class, $users);
+
+        $this->assertContainsOnlyInstancesOf(User::class, $users);
 
         $this->assertCount(5, $users);
+
+        $this->assertSame(5, User::count());
     }
 
     public function testRawOne()
@@ -78,6 +87,8 @@ class PopulatorTest extends PopulatorTestCase
         $users = $this->populator->raw(User::class, 5);
 
         $this->assertInternalType('array', $users);
+
+        $this->assertContainsOnly('array', $users);
 
         $this->assertCount(5, $users);
 
