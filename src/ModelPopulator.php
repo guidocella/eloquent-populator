@@ -192,13 +192,13 @@ class ModelPopulator
             $methodCode = substr($methodCode, $begin, $length);
 
             foreach ([
-                         'belongsTo',
-                         'morphTo',
-                         'morphOne',
-                         'morphMany',
-                         'belongsToMany',
-                         'morphedByMany',
-                     ] as $relationType) {
+                'belongsTo',
+                'morphTo',
+                'morphOne',
+                'morphMany',
+                'belongsToMany',
+                'morphedByMany',
+            ] as $relationType) {
                 $search = '$this->' . $relationType . '(';
 
                 if (!$pos = stripos($methodCode, $search)) {
@@ -769,18 +769,19 @@ class ModelPopulator
      */
     public function getOwners()
     {
-        $belongsToRelations = array_filter($this->belongsToRelations(), function ($relation) {
-            // Rejects the relations whose foreign keys have been passed as custom attributes.
-            return !array_key_exists($relation->getForeignKey(), $this->customAttributes)
-                && !array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
+        return collect($this->belongsToRelations())
+            ->reject(function ($relation) {
+                // Rejects the relations whose foreign keys have been passed as custom attributes.
+                return array_key_exists($relation->getForeignKey(), $this->customAttributes)
+                    || array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
 
-                // And the relations of the model to itself to prevent infinite recursion.
-                && !($relation->getRelated() instanceof $this->model);
-        });
-
-        return array_map(function ($relation) {
-            return get_class($relation->getRelated());
-        }, $belongsToRelations);
+                    // And the relations of the model to itself to prevent infinite recursion.
+                    || $relation->getRelated() instanceof $this->model;
+            })
+            ->map(function ($relation) {
+                return get_class($relation->getRelated());
+            })
+            ->all();
     }
 
     /**
