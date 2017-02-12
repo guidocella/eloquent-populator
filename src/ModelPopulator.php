@@ -81,7 +81,7 @@ class ModelPopulator
     /**
      * The owning class of the Morph To relation of the current model instance, if it has one.
      *
-     * @var string
+     * @var string|null
      */
     protected $morphOwner;
 
