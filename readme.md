@@ -79,7 +79,7 @@ $populator->add(Post::class, 5, [
 ]);
 ```
 
-The model received by the closures will have non-callable attributes and callable attributes of columns that come before in the database already set.
+The model received by the closures will have non-closure attributes and closure attributes of columns that come before in the database already set.
  
 You can also pass an array of functions as the 4th argument and they'll be called before the model's insertion.
 
@@ -254,7 +254,7 @@ States will work even if you define them without defining their model in the fac
 
 ### Closure attributes
 
-Populator will call closure attributes in factory definitions and states together with those of custom attributes and with the same arguments. So like with custom attributes, they will receive the model with non-callable attributes and the return values of callable attributes that come before in the database set. This means that you can do something like this:
+Populator will call closure attributes in factory definitions and states together with those of custom attributes and with the same arguments. So like with custom attributes, they will receive the model with non-closure attributes and the return values of closure attributes that come before in the database set. This means that you can do something like this:
 
 ```php
 $factory->define(Post::class, function (Faker\Generator $faker) {

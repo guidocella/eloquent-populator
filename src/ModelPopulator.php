@@ -547,21 +547,23 @@ class ModelPopulator
 
         // To maximize the number of attributes already set in the
         // model when accessing it from closure custom attributes,
-        // we'll first set all the non-callable attributes.
+        // we'll first set all the non-closure attributes.
         $closureAttributes = [];
 
-        foreach ($attributes as $column => $attribute) {
-            if (is_callable($attribute)) {
-                $closureAttributes[$column] = $attribute;
+        foreach ($attributes as $key => $value) {
+            // Don't use is_callable() here since it returns true for values
+            // that happen to be function names, e.g. country code "IS".
+            if ($value instanceof \Closure) {
+                $closureAttributes[$key] = $value;
             } else {
-                $model->$column = $attribute;
+                $model->$key = $value;
             }
         }
 
         // We'll set the remaining attributes while evaluating the closures,
         // so that the model will have the return values of previous closures already set.
-        foreach ($closureAttributes as $column => $attribute) {
-            $model->$column = $attribute($model, $insertedPKs);
+        foreach ($closureAttributes as $key => $value) {
+            $model->$key = $value($model, $insertedPKs);
         }
     }
 
