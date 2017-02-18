@@ -73,7 +73,7 @@ class ModelPopulator
 
     /**
      * Whether Populator is in testing mode.
-     * true when calling create() or make().
+     * true when calling create(), make() or raw().
      *
      * @var bool
      */
@@ -790,7 +790,7 @@ class ModelPopulator
      */
     protected function associateNullableForeignKeys()
     {
-        // When calling create() or make(), foreign keys are populated even if nullable,
+        // When calling create(), make() or raw(), foreign keys are populated even if nullable,
         // so models created for testing have predictable foreign key values.
         // However, when the formatters are guessed it's still unknown whether create(), make(), execute() or seed()
         // will be called, so we'll override the foreign key formatters in question now.
