@@ -2,7 +2,6 @@
 
 namespace EloquentPopulator;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Faker\Generator;
 use Faker\Guesser\Name;
@@ -332,7 +331,7 @@ class ModelPopulator
 
         return $this->unquoteColumnNames(
             $schema->listTableColumns($table, $database),
-            $platform
+            $platform->getIdentifierQuoteCharacter()
         );
     }
 
@@ -358,14 +357,14 @@ class ModelPopulator
     /**
      * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
      *
-     * @param  array            $columns
-     * @param  AbstractPlatform $platform
+     * @param  array  $columns
+     * @param  string $quote
      * @return array The columns.
      */
-    protected function unquoteColumnNames(array $columns, AbstractPlatform $platform)
+    protected function unquoteColumnNames(array $columns, $quote)
     {
         foreach ($columns as $columnName => $columnData) {
-            if (starts_with($columnName, $platform->getIdentifierQuoteCharacter())) {
+            if (starts_with($columnName, $quote)) {
                 unset($columns[$columnName]);
 
                 $columns[substr($columnName, 1, -1)] = $columnData;
