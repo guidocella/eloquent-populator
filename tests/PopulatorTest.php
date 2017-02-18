@@ -176,6 +176,14 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertNull($club->deleted_at);
     }
 
+    public function testReservedColumnName()
+    {
+        $club = $this->populator->raw(Club::class);
+
+        $this->assertArrayNotHasKey('"index"', $club);
+        $this->assertArrayHasKey('index', $club);
+    }
+
     public function testSeedRunsOneInsertPer500Rows()
     {
         // The first two query insert the rows while the third fetches the IDs that were just inserted.

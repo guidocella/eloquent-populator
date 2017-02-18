@@ -15,6 +15,7 @@ class CreateClubsTable extends Migration
     {
         Schema::create('clubs', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('index');
             $table->timestamps();
             $table->softDeletes();
 

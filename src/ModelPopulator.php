@@ -2,6 +2,7 @@
 
 namespace EloquentPopulator;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Faker\Generator;
 use Faker\Guesser\Name;
@@ -305,21 +306,57 @@ class ModelPopulator
      */
     protected function getColumns($model)
     {
-        $connection = $model->getConnection();
-
-        $schema = $connection->getDoctrineSchemaManager();
+        $schema = $model->getConnection()->getDoctrineSchemaManager();
+        $platform = $schema->getDatabasePlatform();
 
         // Prevents a DBALException if the table contains an enum.
-        $schema->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+        $platform->registerDoctrineTypeMapping('enum', 'string');
 
-        $table = $connection->getTablePrefix() . $model->getTable();
+        list($table, $database) = $this->getTableAndDatabase($model);
+
+        return $this->unquoteColumnNames(
+            $schema->listTableColumns($table, $database),
+            $platform
+        );
+    }
+
+    /**
+     * Get the table and database names of a model.
+     *
+     * @param  Model $model
+     * @return array
+     */
+    protected function getTableAndDatabase($model)
+    {
+        $table = $model->getConnection()->getTablePrefix() . $model->getTable();
 
         $database = null;
+
         if (strpos($table, '.')) {
             list($database, $table) = explode('.', $table);
         }
 
-        return $schema->listTableColumns($table, $database);
+        return [$table, $database];
+    }
+
+    /**
+     * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
+     *
+     * @param  array            $columns
+     * @param  AbstractPlatform $platform
+     * @return array The columns.
+     */
+    protected function unquoteColumnNames(array $columns, AbstractPlatform $platform)
+    {
+        foreach ($columns as $columnName => $columnData) {
+            if (starts_with($columnName, $platform->getIdentifierQuoteCharacter())) {
+                unset($columns[$columnName]);
+
+                $columns[substr($columnName, 1, -1)] = $columnData;
+            }
+        }
+
+        return $columns;
     }
 
     /**
