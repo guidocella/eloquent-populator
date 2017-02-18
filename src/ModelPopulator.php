@@ -177,20 +177,7 @@ class ModelPopulator
                 continue;
             }
 
-            $reflection = new \ReflectionMethod($this->model, $method);
-
-            $file = new \SplFileObject($reflection->getFileName());
-            $file->seek($reflection->getStartLine() - 1);
-
-            $methodCode = '';
-            while ($file->key() < $reflection->getEndLine()) {
-                $methodCode .= $file->current();
-                $file->next();
-            }
-            $methodCode = trim(preg_replace('/\s\s+/', '', $methodCode));
-            $begin = strpos($methodCode, 'function(');
-            $length = strrpos($methodCode, '}') - $begin + 1;
-            $methodCode = substr($methodCode, $begin, $length);
+            $methodCode = $this->getMethodCode($method);
 
             foreach ([
                 'belongsTo',
@@ -215,6 +202,35 @@ class ModelPopulator
         }
 
         return $relations;
+    }
+
+    /**
+     * Get the source code of a method of the model.
+     *
+     * @param  string $method
+     * @return string
+     */
+    protected function getMethodCode($method)
+    {
+        $reflection = new \ReflectionMethod($this->model, $method);
+
+        $file = new \SplFileObject($reflection->getFileName());
+        $file->seek($reflection->getStartLine() - 1);
+
+        $methodCode = '';
+
+        while ($file->key() < $reflection->getEndLine()) {
+            $methodCode .= $file->current();
+
+            $file->next();
+        }
+
+        $methodCode = trim(preg_replace('/\s\s+/', '', $methodCode));
+
+        $begin = strpos($methodCode, 'function(');
+        $length = strrpos($methodCode, '}') - $begin + 1;
+
+        return substr($methodCode, $begin, $length);
     }
 
     /**
