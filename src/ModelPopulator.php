@@ -358,16 +358,14 @@ class ModelPopulator
      * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
      *
      * @param  array  $columns
-     * @param  string $quote
+     * @param  string $quoteCharacter
      * @return array The columns.
      */
-    protected function unquoteColumnNames(array $columns, $quote)
+    protected function unquoteColumnNames(array $columns, $quoteCharacter)
     {
         foreach ($columns as $columnName => $columnData) {
-            if (starts_with($columnName, $quote)) {
-                unset($columns[$columnName]);
-
-                $columns[substr($columnName, 1, -1)] = $columnData;
+            if (starts_with($columnName, $quoteCharacter)) {
+                $columns[substr($columnName, 1, -1)] = array_pull($columns, $columnName);
             }
         }
 
