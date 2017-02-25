@@ -13,7 +13,6 @@ This is a package to populate Laravel's Eloquent ORM's models by guessing the be
 - [Seed fast](#seed-fast)
 - [Model Factory integration](#model-factory-integration)
 - [Testing](#testing)
-- [Custom generator](#testing)
 - [Laravel-Translatable integration](#laravel-translatable-integration)
 
 ## Installation
@@ -394,18 +393,6 @@ $user = populator()->add(Role::class, 20)
                             ]
                         ])
                         ->create();
-```
-
-## Custom generator
-
-The `Faker\Generator` instance used by Populator and the Model Factory is resolved out of Laravel's service container. To use a non-English locale or custom providers, redefine the generator in a service provider. For example, in your `AppServiceProvider`: 
-
-```php
-public function register()
-    $this->app->singleton(\Faker\Generator::class, function () {
-        return \Faker\Factory::create('es_ES');
-    });
-}
 ```
 
 ## Laravel-Translatable integration
