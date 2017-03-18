@@ -634,7 +634,6 @@ class ModelPopulator
      *
      * @param  Model $model
      * @return array
-     * @throws \InvalidArgumentException
      */
     protected function getFactoryAttributes(Model $model)
     {
@@ -654,11 +653,11 @@ class ModelPopulator
 
         $modelClass = get_class($model);
 
-        $isDefined = call_user_func(\Closure::bind(function () use ($modelClass) {
+        $modelIsDefined = call_user_func(\Closure::bind(function () use ($modelClass) {
             return isset($this->definitions[$modelClass]);
         }, $factory, $factory));
 
-        if (!$isDefined) {
+        if (!$modelIsDefined) {
             // If the model is not defined in the factory and the developer didn't apply any state,
             // that means he doesn't need the factory for this model, so we'll return an empty array.
             if (!$states) {
@@ -673,23 +672,35 @@ class ModelPopulator
             });
         }
 
-        $stateAttributes = [];
+        return $factory->raw($modelClass, $this->getStateAttributes($factory, $states, $modelClass));
+    }
 
-        foreach ($states as $state) {
-            $stateClosure = call_user_func(
-                \Closure::bind(function () use ($modelClass, $state) {
-                    if (!isset($this->states[$modelClass][$state])) {
-                        throw new \InvalidArgumentException("Unable to locate [{$state}] state for [{$modelClass}].");
-                    }
+    /**
+     * Get the factory state attributes of the model being built.
+     *
+     * @param  Eloquent\Factory $factory
+     * @param  string[]         $states
+     * @param  string           $modelClass
+     * @return array
+     * @throws \InvalidArgumentException
+     */
+    protected function getStateAttributes($factory, $states, $modelClass)
+    {
+        return collect($states)
+            ->flatMap(function ($state) use ($factory, $modelClass) {
+                $stateClosure = call_user_func(
+                    \Closure::bind(function () use ($modelClass, $state) {
+                        if (!isset($this->states[$modelClass][$state])) {
+                            throw new \InvalidArgumentException("Unable to locate [{$state}] state for [{$modelClass}].");
+                        }
 
-                    return $this->states[$modelClass][$state];
-                }, $factory, $factory)
-            );
+                        return $this->states[$modelClass][$state];
+                    }, $factory, $factory)
+                );
 
-            $stateAttributes = array_merge($stateAttributes, $stateClosure($this->generator));
-        }
-
-        return $factory->raw($modelClass, $stateAttributes);
+                return $stateClosure($this->generator);
+            })
+            ->all();
     }
 
     /**
