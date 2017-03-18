@@ -169,38 +169,31 @@ class ModelPopulator
     protected function getRelations()
     {
         // Based on Barryvdh\LaravelIdeHelper\Console\ModelsCommand::getPropertiesFromMethods().
-        $relations = [];
+        return collect(get_class_methods($this->model))
+            ->reject(function ($methodName) {
+                return method_exists(Model::class, $methodName);
+            })
+            ->filter(function ($methodName) {
+                $methodCode = $this->getMethodCode($methodName);
 
-        foreach (get_class_methods($this->model) as $method) {
-            if (method_exists(Model::class, $method)) {
-                continue;
-            }
-
-            $methodCode = $this->getMethodCode($method);
-
-            foreach ([
-                'belongsTo',
-                'morphTo',
-                'morphOne',
-                'morphMany',
-                'belongsToMany',
-                'morphedByMany',
-            ] as $relationType) {
-                $search = '$this->' . $relationType . '(';
-
-                if (!$pos = stripos($methodCode, $search)) {
-                    continue;
-                }
-
-                $relation = $this->model->$method();
-
-                if ($relation instanceof Relation) {
-                    $relations[] = $relation;
-                }
-            }
-        }
-
-        return $relations;
+                return collect([
+                    'belongsTo',
+                    'morphTo',
+                    'morphOne',
+                    'morphMany',
+                    'belongsToMany',
+                    'morphedByMany',
+                ])->contains(function ($relationName) use ($methodCode) {
+                    return stripos($methodCode, '$this->' . $relationName . '(');
+                });
+            })
+            ->map(function ($methodName) {
+                return $this->model->$methodName();
+            })
+            ->filter(function ($relation) {
+                return $relation instanceof Relation;
+            })
+            ->all();
     }
 
     /**
