@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class PivotPopulator
 {
+    use GuessesColumnFormatters;
+
     /**
      * The ModelPopulator of the relation's parent.
      *
@@ -40,7 +42,7 @@ class PivotPopulator
     /**
      * The number of models to attach.
      *
-     * @var int|null
+     * @var int|string|null
      */
     protected $quantity;
 
@@ -50,6 +52,7 @@ class PivotPopulator
      * @var (\Closure|null)[]
      */
     protected $guessedFormatters = [];
+
     /**
      * Custom attributes for the pivot table.
      *
@@ -63,24 +66,64 @@ class PivotPopulator
      * @param ModelPopulator $modelPopulator
      * @param BelongsToMany  $relation
      * @param Generator      $generator
-     * @param array          $guessedFormatters
      */
-    public function __construct(
-        ModelPopulator $modelPopulator,
-        BelongsToMany $relation,
-        Generator $generator,
-        array $guessedFormatters
-    ) {
+    public function __construct(ModelPopulator $modelPopulator, BelongsToMany $relation, Generator $generator)
+    {
         $this->modelPopulator = $modelPopulator;
         $this->relation = $relation;
-        $this->relatedClass = get_class($relation->getRelated());
         $this->generator = $generator;
-        $this->guessedFormatters = $this->unsetForeignKeys($guessedFormatters);
+        $this->relatedClass = get_class($relation->getRelated());
+    }
+
+    /**
+     * Set the number of related models to attach.
+     *
+     * @param int $quantity
+     */
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+    }
+
+    /**
+     * Attach a random quantity of the related model,
+     * unless the developer hasn't already specified an exact number.
+     *
+     * @param string|int $quantity
+     */
+    public function attachRandomQuantity()
+    {
+        if (!$this->quantity) {
+            $this->quantity = 'random';
+        }
+    }
+
+    /**
+     * Set custom attributes that will override the pivot formatters.
+     *
+     * @param array $attributes
+     */
+    public function setCustomAttributes($attributes)
+    {
+        $this->customAttributes = $attributes;
+    }
+
+    /**
+     * Set the guessed column formatters for extra attributes of the pivot table.
+     *
+     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @return void
+     */
+    public function setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    {
+        $this->guessedFormatters = $this->unsetForeignKeys(
+            $this->getGuessedColumnFormatters($this->relation, $makeNullableColumnsOptionalAndKeepTimestamps)
+        );
     }
 
     /**
      * Unset the closures that have been associated to the foreign keys by ColumnTypeGuesser,
-     * so that attach() will set them to the correct values automatically.
+     * so that attach() will automatically set them to the correct values.
      *
      * @param  array $guessedFormatters
      * @return array The formatters.
@@ -122,27 +165,7 @@ class PivotPopulator
             ? 'getQualifiedRelatedKeyName' // Laravel >=5.4
             : 'getOtherKey';
 
-        return last(explode('.', $this->relation->$method()));
-    }
-
-    /**
-     * Set the number of related models to attach.
-     *
-     * @param int $quantity
-     */
-    public function setQuantity($quantity)
-    {
-        $this->quantity = $quantity;
-    }
-
-    /**
-     * Override the formatters.
-     *
-     * @param array $attributes
-     */
-    public function setCustomAttributes($attributes)
-    {
-        $this->customAttributes = $attributes;
+        return last(explode('.', $this->relation->getQualifiedRelatedKeyName()));
     }
 
     /**
@@ -204,11 +227,11 @@ class PivotPopulator
             return $this->quantity;
         }
 
-        if ($this->modelPopulator->isTesting()) {
-            return count($insertedPKs[$this->relatedClass]);
+        if ($this->quantity === 'random') {
+            return mt_rand(0, count($insertedPKs[$this->relatedClass]));
         }
 
-        return mt_rand(0, count($insertedPKs[$this->relatedClass]));
+        return count($insertedPKs[$this->relatedClass]);
     }
 
     /**

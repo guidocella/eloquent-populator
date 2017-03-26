@@ -53,11 +53,4 @@ class HelperTest extends PopulatorTestCase
 
         $this->assertSame('Overridden email', $user->email);
     }
-
-    public function testPassingCustomAttributesToCreate()
-    {
-        $user = populator(User::class)->create(['email' => 'Overridden email']);
-
-        $this->assertSame('Overridden email', $user->email);
-    }
 }

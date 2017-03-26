@@ -5,31 +5,30 @@ This is a package to populate Laravel's Eloquent ORM's models by guessing the be
 # Table of contents
 
 - [Installation](#installation)
-- [Usage](#usage)
+- [Seeding](#seeding)
 - [Relationships](#relationships)
     - [Belongs To](#belongs-to)
     - [Morph To](#morph-to)
     - [Belongs To Many](#belongs-to-many)
-- [Seed fast](#seed-fast)
 - [Model Factory integration](#model-factory-integration)
 - [Testing](#testing)
 - [Laravel-Translatable integration](#laravel-translatable-integration)
 
 ## Installation
 
-Add this package to the development dependencies in your `composer.json`. You may want to substitute it for Faker, since it will be required by Populator.
+Require this package with Composer
+
+```bash
+$ composer require --dev guidocella/eloquent-populator ^2
+```
+
+Or manually add it to the development dependencies in your `composer.json` and run `composer update`. You may want to substitute it for Faker, since it will be required by Populator.
 
 ```json
-"guidocella/eloquent-populator": "^1",
+"guidocella/eloquent-populator": "^2"
 ```
 
-Then run
-
-```sh
-composer update
-```
-
-## Usage
+## Seeding
 
 Either type hint `EloquentPopulator\Populator` in your `DatabaseSeeder`'s `run` method to have it dependency injected if you're using Laravel 5.4+
 
@@ -94,14 +93,34 @@ If only the class name is passed, the number of models to populate defaults to 1
 
 ### Creating the models
 
-Finally, call `execute` to populate the database with the added models. It will return all the created models or collections, depending on whether their quantity was 1 or greater, indexed by model class name.
+Finally, call `seed` to populate the database with the added models.
+ 
+ ```php
+$populator->add(User::class, 10)
+          ->add(Post::class, 5)
+          ->seed();
+ ```
+
+If a column that wasn't overridden is nullable, each value inserted by `seed` will have a 50% of being set to null or to the guessed formatter.
+
+`seed` returns the inserted primary keys and runs one insert per 500 rows of every model to speed up the seeding (the chunking in blocks of 500 rows is because SQL limits how many rows you can insert at once).
+
+Even though it bulk inserts the models, timestamps are still populated with random datetimes since their formatters are guessed along those of the other columns, and even mutators and JSON casts will work (internally Populator fills a model and gets its attributes every time to bulk insert them later), however Eloquent events won't fire.
+
+### execute()
+
+If you want the events to be dispatched, you can use `execute()` as an alternative to `seed()`. It creates the added models one by one, and returns all the created models or collections, depending on whether their quantity was 1 or greater, indexed by model class name.
 
 ```php
-$createdModels = $populator->execute();
+$createdModels = $populator->add(User::class, 10)
+                           ->add(Post::class, 5)
+                           ->execute();
 
 $userModel = $createdModels[User::class];
 $postCollection = $createdModels[Post::class];
 ```
+
+`execute()` doesn't make nullable columns optional, since it is more likely to be used for testing than for seeding, and when testing creating models with predictable values can be more useful.
 
 ## Relationships
 
@@ -118,31 +137,6 @@ $populator->add(User::class, 5)
 $phone = $populator->execute()[Phone::class];
 
 $phone->user; // One of the users that were created.
-```
-
-#### Optional relations
-
-If a foreign key is nullable, Populator will make its formatter optional.
-
-```php
-// Assume that posts.user_id is nullable.
-
-$populator->add(User::class, 5)
-          ->add(Post::class);
-
-$post = $populator->execute()[Post::class];
-
-$post->user; // null or one of the the users that were created.
-```
-
-You can still force the association by explicitly setting the foreign key:
-
-```php
-$populator->add(Post::class, function ($faker, $insertedPKs) {
-   return [
-       'user_id' => $faker->randomElement($insertedPKs[User::class]),
-   )];
-});
 ```
 
 ### Morph To
@@ -163,13 +157,14 @@ Associating multiple Morph To relations on a single model is currently not suppo
 
 ### Belongs To Many
 
-If a model has a Belongs To Many or inverse Morph To Many relation to another one that has already been added, by default Populator will attach a number between 0 and the related model's quantity of the related model's instances to it.
+If a model has a Belongs To Many or inverse Morph To Many relation to another one that has already been added, by default `seed` will attach a number between 0 and the quantity specified for the related model of the related model's instances to it.
 
 ```php
-$populator->add(Role::class, 5)
-          ->add(User::class);
+$insertedPKs = $populator->add(Role::class, 5)
+                         ->add(User::class)
+                         ->seed();
 
-$user = $populator->execute()[User::class];
+$user = User::find($insertedPKs[User::class][0]);
 
 $user->roles->count(); // 0 to 5.
 ```
@@ -208,20 +203,6 @@ $populator->add(User::class)->pivotAttributes([
     ],
 ]);
 ```
-
-## Seed fast
-
-To run only one insert per 500 rows of every model, call `seed` instead of `execute` (the chunking in blocks of 500 rows is because SQL limits how many rows you can insert at once).
-
-```php
-$populator->add(User::class, 10000)
-          ->add(Post::class, 10000)
-          ->seed();
-```
-
-`seed` returns the inserted primary keys.
-
-Timestamps are still populated with random datetimes since their formatters are guessed along those of the other columns, and even mutators and JSON casts will work (internally Populator fills a model and gets its attributes every time to bulk insert them later), however Eloquent events won't fire.
 
 ## Model Factory integration
 
@@ -282,9 +263,9 @@ populator(User::class)->make(); // Same as $populator->add(User::class)->make()
 
 populator(User::class, 'admin')->create();
 
-populator(User::class, 10)->create(['name' => 'Overridden name']);
+populator(User::class, 10)->make(['name' => 'Overridden name']);
 
-populator(User::class, 'admin', 10)->make(['name' => 'Overridden name']);
+populator(User::class, 'admin', 10)->create(['name' => 'Overridden name']);
 ```
 
 `add` returns an instance of `EloquentPopulator\ModelPopulator` which manages single models and has these `make` and `create` methods that accept only the custom attributes. But you can also call `make` and `create` directly on `EloquentPopulator\Populator` as a shortcut. The `make` and `create` in `EloquentPopulator\Populator` have the same signature as `add`.
@@ -316,9 +297,15 @@ $user = $populator->raw(User::class, ['name' => 'foo']);
 $user['name']; // "foo"
 ```
 
-### Relations
+#### execute()
 
-`create` and `make` change how relations are associated.
+`execute` is mostly useful to add a model and its children, and then return the parent model.
+
+```php
+$parent = populator()->add(Parent::class)->add(Child::class)->execute()[Parent::class];
+```
+
+### Relations
 
 #### Belongs To
 
@@ -339,34 +326,20 @@ $post = populator(Post::class)->make(['user_id' => null]);
 
 $post->user; // null
 
+
 $post = populator(Post::class)->make(['user_id' => 1]);
 
 $post->user->id; // 1
 ```
-
-By default, when calling `create` or `make` owning models are always created even if the foreign key is nullable. This way models created for tests have predictable foreign key values, and overriding the default behaviour by passing a null foreign key is easier than manually creating the owning model.
 
 #### Morph To
 
 For Morph To relations, unless you pass the foreign key and morph type as custom attributes or define them in the factory, you'll have to add the owning model to be associated before creating the child, since Populator has no way of knowning who its owners are otherwise.
 
 ```php
-$populator = populator();
-
-$populator->add(Post::class);
-
-$comment = $populator->make(Comment::class);
-```
-
-Or with method chaining:
-
-```php
 $comment = populator()->add(Post::class)->make(Comment::class);
-```
 
-Or even:
-
-```php
+// Or
 $comment = populator(Post::class)->make(Comment::class);
 ```
 
@@ -374,7 +347,7 @@ Notice how even if `make` and `create` are chained from `add` or the helper with
 
 #### Belongs To Many
 
-If a model with a Belongs To Many relation to the model on which `create` is called was added, by default Populator will attach all of the instances of the related model.
+By default Populator will attach all of the added instances of many-to-many related models when using `create` or `execute`.
 
 ```php
 $user = populator()->add(Role::class, 20)->create(User::class);
@@ -386,13 +359,12 @@ You can call setters before `create` like this:
 
 ```php
 $user = populator()->add(Role::class, 20)
-                   ->add(User::class)
-                        ->pivotAttributes([
-                            Role::class => [
-                                'expires_at' => Carbon::now()
-                            ]
-                        ])
-                        ->create();
+                   ->add(User::class)->pivotAttributes([
+                                         Role::class => [
+                                             'expires_at' => Carbon::now(),
+                                         ],
+                                       ])
+                   ->create();
 ```
 
 ## Laravel-Translatable integration
@@ -427,9 +399,8 @@ Calling `translateIn` on Populator sets the default locales, but you can also ch
 ```php
 $populator->translateIn([])
           ->add(Product) // No ProductTranslation will be created.
-          ->add(Role::class)
-              ->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
-              ->execute();
+          ->add(Role::class)->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
+          ->execute();
 ```
 
 ### Overriding translation formatters

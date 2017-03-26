@@ -108,9 +108,12 @@ class ColumnTypeGuesser
             case 'date':
             case 'datetime':
             case 'datetimetz':
+                return function () {
+                    return $this->generator->datetime;
+                };
             case 'time':
                 return function () {
-                    return Carbon::instance($this->generator->datetime);
+                    return $this->generator->time;
                 };
             case 'boolean':
                 return function () {

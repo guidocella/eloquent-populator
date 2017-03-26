@@ -19,7 +19,7 @@ class CreateClubsTable extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->integer('parent_id')->unsigned()->nullable();
+            $table->unsignedInteger('parent_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('clubs');
         });
     }

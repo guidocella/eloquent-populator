@@ -15,9 +15,9 @@ class CreateUsersTable extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('email');
+            $table->string('email')->nullable();
 
-            $table->smallInteger('smallint');
+            $table->smallInteger('smallint')->nullable();
             $table->integer('integer');
             $table->bigInteger('bigint');
             $table->decimal('decimal', 6, 4);
@@ -30,7 +30,7 @@ class CreateUsersTable extends Migration
             $table->timestamp('timestamp');
             $table->boolean('boolean');
 
-            $table->integer('company_id')->unsigned()->nullable();
+            $table->unsignedInteger('company_id')->nullable();
             $table->foreign('company_id')->references('id')->on('companies');
         });
     }

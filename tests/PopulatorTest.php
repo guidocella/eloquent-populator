@@ -4,6 +4,7 @@ namespace EloquentPopulator;
 
 use Carbon\Carbon;
 use EloquentPopulator\Models\Club;
+use EloquentPopulator\Models\Company;
 use EloquentPopulator\Models\Post;
 use EloquentPopulator\Models\User;
 use EloquentPopulator\Models\Video;
@@ -95,6 +96,16 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertFalse(User::exists());
     }
 
+    public function emptytestExecuteDoesntMakeNullableColumnsOptional()
+    {
+        $users = $this->populator->add(Company::class)
+                                 ->create(User::class, 15);
+
+        $this->assertFalse($users->contains('email', null));
+        $this->assertFalse($users->contains('smallint', null));
+        $this->assertFalse($users->contains('company_id', null));
+    }
+
     public function testColumnTypeGuesser()
     {
         $user = $this->populator->make(User::class);
@@ -106,10 +117,10 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertInternalType('float', $user->float);
         $this->assertTrue(is_string($user->string) && strlen($user->string));
         $this->assertTrue(is_string($user->text) && strlen($user->text));
-        $this->assertInstanceOf(Carbon::class, $user->date);
-        $this->assertInstanceOf(Carbon::class, $user->datetime);
-        $this->assertInstanceOf(Carbon::class, $user->time);
-        $this->assertInstanceOf(Carbon::class, $user->timestamp);
+        $this->assertInstanceOf(\DateTime::class, $user->date);
+        $this->assertInstanceOf(\DateTime::class, $user->datetime);
+        $this->assertInstanceOf(\DateTime::class, $user->timestamp);
+        $this->assertRegExp('/\d\d:\d\d:\d\d/', $user->time);
         $this->assertInternalType('bool', $user->boolean);
 
         // DATETIME-TZ, JSON and UUID are not supported by SQLite, so there's no point in testing them.
@@ -191,7 +202,7 @@ class PopulatorTest extends PopulatorTestCase
 
         $this->app['db']->enableQueryLog();
 
-        $this->populator->add(User::class, 501);
+        $this->populator->add(User::class, 501, ['company_id' => null]);
 
         $this->populator->seed();
 
@@ -201,7 +212,7 @@ class PopulatorTest extends PopulatorTestCase
     public function testSeedReturnsPrimaryKeys()
     {
         $this->populator
-            ->add(User::class)
+            ->add(User::class, ['company_id' => null])
             ->add(Video::class, 2);
 
         $this->assertSame(
@@ -211,5 +222,21 @@ class PopulatorTest extends PopulatorTestCase
             ],
             $this->populator->seed()
         );
+    }
+
+    public function testSeedMakesNullableColumnsOptional()
+    {
+        $this->populator->add(Company::class)
+                        ->add(User::class, 100)
+                        ->seed();
+
+        $this->assertTrue(User::whereNull('email')->exists());
+        $this->assertTrue(User::whereNotNull('email')->exists());
+
+        $this->assertTrue(User::whereNull('smallint')->exists());
+        $this->assertTrue(User::whereNotNull('smallint')->exists());
+
+        $this->assertTrue(User::whereNull('company_id')->exists());
+        $this->assertTrue(User::whereNotNull('company_id')->exists());
     }
 }

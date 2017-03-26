@@ -14,9 +14,9 @@ class CreateClubUserTable extends Migration
     public function up()
     {
         Schema::create('club_user', function (Blueprint $table) {
-            $table->integer('user_id')->unsigned();
+            $table->unsignedInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-            $table->integer('club_id')->unsigned();
+            $table->unsignedInteger('club_id');
             $table->foreign('club_id')->references('id')->on('clubs');
         });
     }

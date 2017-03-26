@@ -29,18 +29,3 @@ if (!function_exists('populator')) {
         return $populator;
     }
 }
-
-if (!function_exists('array_insert')) {
-    /**
-     * Insert an array at a certain offset of another array.
-     *
-     * @param  array $original
-     * @param  array $new
-     * @param  int   $offset
-     * @return array
-     */
-    function array_insert(array $original, array $new, $offset)
-    {
-        return array_slice($original, 0, $offset, true) + $new + array_slice($original, $offset, null, true);
-    }
-}

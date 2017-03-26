@@ -25,6 +25,19 @@ class TranslationTest extends PopulatorTestCase
         $this->assertSame(['en', 'es', 'es-MX', 'es-CO'], $product->translations->pluck('locale')->all());
     }
 
+    public function testExecuteDoesntMakeNullableColumnsOptional()
+    {
+        $this->assertTrue($this->populator->make(Product::class, 50)->every('description', '!==', null));
+    }
+
+    public function testSeedMakesNullableColumnsOptional()
+    {
+        $this->populator->add(Product::class, 50)->seed();
+
+        $this->assertTrue(ProductTranslation::whereNull('description')->exists());
+        $this->assertTrue(ProductTranslation::whereNotNull('description')->exists());
+    }
+
     public function testTranslateIn()
     {
         $this->populator
@@ -37,6 +50,13 @@ class TranslationTest extends PopulatorTestCase
         $this->assertSame(['en', 'es-MX'], $models[Product::class]->translations()->pluck('locale')->all());
 
         $this->assertSame(['en'], $models[Role::class]->translations()->pluck('locale')->all());
+    }
+
+    public function testEmptyModelPopulatorLocalesAndNonEmptyPopulatorLocales()
+    {
+        $product = $this->populator->add(Product::class)->translateIn([])->make();
+
+        $this->assertSame([], $product->translations->pluck('locale')->all());
     }
 
     public function testCustomTranslationAttributes_forOneLocale()
@@ -81,7 +101,7 @@ class TranslationTest extends PopulatorTestCase
         // Tests that models with and without translations added together are all inserted.
         $this->populator
             ->add(Product::class, 150)
-            ->add(User::class)
+            ->add(User::class, ['company_id' => null])
             ->seed();
 
         $this->assertCount(2 + (int)ceil(150 * 4 / 500) + 2, $this->app['db']->getQueryLog());

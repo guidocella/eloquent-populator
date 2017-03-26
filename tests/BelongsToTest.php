@@ -16,53 +16,54 @@ class BelongsToTest extends PopulatorTestCase
 {
     public function testExecuteAssociatesBelongsTo()
     {
-        $this->populator->add(User::class, ['id' => 5]);
-
-        $phone = $this->populator->make(Phone::class);
+        $phone = $this->populator->add(User::class, ['id' => 5])->make(Phone::class);
 
         $this->assertSame(5, $phone->user_id);
     }
 
-    public function testExecuteWithOptionalBelongsTo()
+    public function testExecuteAlwaysPopulateNullableForeignKeys()
     {
-        $this->populator
-            ->add(User::class, 100)
-            ->add(Post::class, 100);
+        $posts = $this->populator->add(User::class, 100)->create(Post::class, 100);
 
-        $posts = $this->populator->execute()[Post::class];
-
-        $this->assertTrue($posts->contains('user_id', null));
-        $this->assertTrue($posts->where('user_id', '!=', null)->isNotEmpty());
+        $this->assertTrue($posts->every('user_id', '!=', null));
     }
 
-    public function testMakeAndCreateCreateOwnerifForeignKeyIsNotNullable()
+    public function testSeedMakesNullableForeignKeysOptional()
     {
-        $phone = $this->populator->make(Phone::class);
+        $this->populator->add(User::class, 100)->add(Post::class, 100)->seed();
 
-        $this->assertNotNull($phone->user_id);
+        $this->assertTrue(Post::whereNull('user_id')->exists());
+        $this->assertTrue(Post::whereNotNull('user_id')->exists());
     }
 
-    public function testMakeAndCreateCreateOwnersRecursivelyIfForeignKeysAreNullable()
+    public function testRecursiveOwnerCreationWithNullableForeignKeys()
     {
         $post = $this->populator->make(Post::class);
 
         $this->assertNotNull($post->user->company_id);
     }
 
-    public function testMakeAndCreateCreateDontCreateOwner_ifForeignKeyIsPassedAsCustomAttribute()
+    public function testOwnerIsNotCreated_ifForeignKeyIsPassedAsCustomAttribute()
     {
         $post = $this->populator->make(Post::class, ['user_id' => null]);
 
         $this->assertFalse(User::exists());
     }
 
-    public function testMakeAndCreateCreateDontCreateOwner_ifForeignKeyIsInFactoryDefinition()
+    public function testOwnerIsNotCreated_ifForeignKeyIsInFactoryDefinition()
     {
         $this->app[Eloquent\Factory::class]->define(Post::class, function () {
             return ['user_id' => null];
         });
 
         $this->populator->make(Post::class);
+
+        $this->assertFalse(User::exists());
+    }
+
+    public function testOwnerIsNotCreated_ifForeignKeyIsPassedAsCustomAttributeToTheMakeOfModelPopulator()
+    {
+        $post = $this->populator->add(Post::class)->make(['user_id' => null]);
 
         $this->assertFalse(User::exists());
     }
@@ -78,18 +79,19 @@ class BelongsToTest extends PopulatorTestCase
 
     public function testAssociatingMorphTo()
     {
-        $this->populator
-            ->add(Post::class)   // Tests morphMany().
-            ->add(Video::class); // Tests morphOne().
+        $comments = $this->populator->add(Post::class)// Tests morphMany().
+                                    ->add(Video::class)// Tests morphOne().
+                                    ->create(Comment::class, 50);
 
-        $comments = $this->populator->create(Comment::class, 50);
-
-        $this->assertTrue($comments[0]->commentable instanceof Post || $comments[0]->commentable instanceof Video);
+        $this->assertSame(1, $comments[0]->commentable_id);
 
         // Tests that the comments haven't all been assigned the same morph type,
         // and that the morph map's custom name was used.
         $this->assertTrue($comments->contains('commentable_type', Post::class));
-        $this->assertTrue($comments->where('commentable_type', 'videos')->isNotEmpty());
+        $this->assertTrue($comments->contains('commentable_type', 'videos'));
+
+        $this->assertFalse($comments->contains('commentable_id', null));
+        $this->assertFalse($comments->contains('commentable_type', null));
     }
 
     public function testSeedAssociatesAutoIncrementPrimaryKeys()
@@ -111,5 +113,19 @@ class BelongsToTest extends PopulatorTestCase
 
         $this->assertTrue(Company::whereNull('country_code')->exists());
         $this->assertTrue(Company::whereNotNull('country_code')->exists());
+    }
+
+    public function testSeedMakesNullableMorphsOptional()
+    {
+        $this->populator->add(Post::class)
+                        ->add(Video::class)
+                        ->add(Comment::class, 50)
+                        ->seed();
+
+        $this->assertTrue(Comment::whereNull('commentable_id')->exists());
+        $this->assertTrue(Comment::whereNotNull('commentable_id')->exists());
+
+        $this->assertFalse(Comment::whereNull('commentable_id')->whereNotNull('commentable_type')->exists());
+        $this->assertFalse(Comment::whereNull('commentable_type')->whereNotNull('commentable_id')->exists());
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 trait PopulatesTranslations
 {
     /**
-     * The locales in which to create translations.
+     * The locales in which to create translations. If not set, Populator's locales are used.
      *
      * @var array|null
      */
@@ -82,7 +82,29 @@ trait PopulatesTranslations
      */
     protected function shouldTranslate()
     {
-        return $this->locales && in_array(Translatable::class, class_uses($this->model));
+        return $this->getLocales() && in_array(Translatable::class, class_uses($this->model));
+    }
+
+    /**
+     * Set the guessed formatters of the translation model.
+     *
+     * @param bool $makeNullableColumnsOptionalAndKeepTimestamps
+     */
+    protected function guessTranslationFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    {
+        // Don't use Translatable::getNewTranslation()
+        // because it runs a query every first time it accesses $model->translations.
+        $translationModelName = $this->model->getTranslationModelName();
+        $translationModel = new $translationModelName;
+
+        $this->guessedTranslationFormatters = $this->getGuessedColumnFormatters(
+            $translationModel,
+            $makeNullableColumnsOptionalAndKeepTimestamps
+        );
+
+        // We'll unset the foreign key formatter so the attribute won't be set to
+        // a random number which would never be overwritten when make() is used.
+        unset($this->guessedTranslationFormatters[$this->model->getRelationKey()]);
     }
 
     /**
@@ -94,23 +116,10 @@ trait PopulatesTranslations
      */
     protected function translate(array $insertedPKs)
     {
-        // We'll first set the translations relation to a new collection
-        // through an instance of the translation model, just in case its newCollection() method is overridden,
-        // but we're not gonna use Translatable::getNewTranslation()
-        // because it runs a query every first time it accesses $model->translations.
         $translationModelName = $this->model->getTranslationModelName();
         $translationModel = new $translationModelName;
 
         $this->model->setRelation('translations', $translationModel->newCollection());
-
-        // If translate() is being called for the first time, sets the guessed formatters of the translation model.
-        if ($this->guessedTranslationFormatters === []) {
-            $this->guessedTranslationFormatters = $this->guessColumnFormatters($translationModel);
-
-            // We'll unset the foreign key formatter so the attribute won't be set to
-            // a random number which would never be overwritten when make() is used.
-            unset($this->guessedTranslationFormatters[$this->model->getRelationKey()]);
-        }
 
         foreach ($this->getLocales() as $locale) {
             $translationModel = new $translationModelName;
@@ -141,18 +150,22 @@ trait PopulatesTranslations
      */
     protected function getLocales()
     {
+        if ($this->locales === []) {
+            return [];
+        }
+
+        $rawLocales = $this->locales ?: $this->populator->getLocales() ?: [];
+
         $locales = [];
 
-        $separator = config('translatable.locale_separator');
-
-        foreach ($this->locales as $key => $value) {
+        foreach ($rawLocales as $key => $value) {
             if (is_string($value)) {
                 $locales[] = $value;
             } else {
                 $locales[] = $key;
 
                 foreach ($value as $countryLocale) {
-                    $locales[] = $key . $separator . $countryLocale;
+                    $locales[] = $key . config('translatable.locale_separator') . $countryLocale;
                 }
             }
         }

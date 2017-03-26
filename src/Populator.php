@@ -31,6 +31,27 @@ class Populator
     protected $quantities = [];
 
     /**
+     * The last added model class.
+     *
+     * @var string
+     */
+    protected $lastModelClass;
+
+    /**
+     * The last added ModelPopulator.
+     *
+     * @var ModelPopulator
+     */
+    protected $lastModelPopulator;
+
+    /**
+     * The last added quantity.
+     *
+     * @var int
+     */
+    protected $lastQuantity;
+
+    /**
      * The classes with a one-to-one or many polymorphic relation.
      *
      * @var array[]
@@ -65,15 +86,13 @@ class Populator
      * @param  int|array|string $quantity         The number of models to create.
      * @param  array            $customAttributes Custom attributes that will override the guessed formatters.
      * @param  array            $modifiers        Functions to call before the model is saved.
-     * @param  bool             $testing          Whether Populator is in testing mode. For internal use.
      * @return ModelPopulator
      */
     public function add(
         $modelClass,
         $quantity = 1,
         array $customAttributes = [],
-        array $modifiers = [],
-        $testing = false
+        array $modifiers = []
     ) {
         if (is_array($quantity)) {
             $customAttributes = $quantity;
@@ -88,40 +107,65 @@ class Populator
             new $modelClass,
             $this->generator,
             $customAttributes,
-            $modifiers,
-            $testing,
-            $this->locales
+            $modifiers
         );
 
         if (isset($state)) {
             $modelPopulator->states($state);
         }
 
-        if ($testing) {
-            // Adds the owners before the model that was passed to make() or create(),
-            // and in reverse order, so that the children will be associated to their parents.
-            $this->addOwners($modelPopulator->getOwners());
+        // We'll actually save the ModelPopulator in a field and add it for real
+        // on the next call to add(), execute() or seed().
+        // This is because even if a model has already been added, custom attributes can still be passed
+        // to a subsequent call to ModelPopulator::raw()/make()/create(), and they can contain
+        // foreign keys that should prevent Populator from automatically adding their owning models.
+        $this->addLastModel();
 
-            $this->modelPopulators = array_insert($this->modelPopulators, [$modelClass => $modelPopulator], -1);
-            $this->quantities = array_insert($this->quantities, [$modelClass => $quantity], -1);
-        } else {
-            $this->modelPopulators[$modelClass] = $modelPopulator;
-            $this->quantities[$modelClass] = $quantity;
-        }
+        $this->lastModelClass = $modelClass;
+        $this->lastModelPopulator = $modelPopulator;
+        $this->lastQuantity = $quantity;
 
         return $modelPopulator;
     }
 
     /**
-     * Recursively add the owners of a model.
+     * Push the ModelPopulator and quantity of the last added model
+     * onto their respective fields.
      *
-     * @param  array $owners The class names of the owners.
      * @return void
      */
-    public function addOwners(array $owners)
+    protected function addLastModel()
+    {
+        if (!$this->lastModelPopulator) {
+            return;
+        }
+
+        $this->addOwners($this->lastModelPopulator->getOwners());
+
+        $this->modelPopulators[$this->lastModelClass] = $this->lastModelPopulator;
+        $this->quantities[$this->lastModelClass] = $this->lastQuantity;
+    }
+
+    /**
+     * Recursively add the owners of a model that haven't already been added.
+     *
+     * @param  string[] $owners The class names of the owners.
+     * @return void
+     */
+    protected function addOwners(array $owners)
     {
         foreach ($owners as $owner) {
-            $this->add($owner, 1, [], [], true);
+            if (isset($this->modelPopulators[$owner])) {
+                continue;
+            }
+
+            $modelPopulator = new ModelPopulator($this, new $owner, $this->generator, [], []);
+
+            // We'll add the owners in reverse order, so that the children will be associated to their parents.
+            $this->addOwners($modelPopulator->getOwners());
+
+            $this->modelPopulators[$owner] = $modelPopulator;
+            $this->quantities[$owner] = 1;
         }
     }
 
@@ -133,11 +177,11 @@ class Populator
      */
     public function wasAdded($modelClass)
     {
-        return isset($this->modelPopulators[$modelClass]);
+        return isset($this->modelPopulators[$modelClass]) || $this->lastModelClass === $modelClass;
     }
 
     /**
-     * Save a possible owning class for a child class in a many-to-one
+     * Save a potential owning class for a child class in a many-to-one
      * or one-to-one polymorphic relation with it,
      * so that the child model will be associated to one of its owners when it is populated.
      *
@@ -169,14 +213,15 @@ class Populator
      */
     public function execute($persistLastModel = true)
     {
+        $this->addLastModel();
+
         $insertedPKs = [];
         $createdModels = [];
 
-        end($this->quantities);
-        $lastModel = key($this->quantities);
-
         foreach ($this->quantities as $modelClass => $quantity) {
-            $persist = $modelClass === $lastModel ? $persistLastModel : true;
+            $this->modelPopulators[$modelClass]->setGuessedColumnFormatters(false);
+
+            $persist = $modelClass === $this->lastModelClass ? $persistLastModel : true;
 
             if ($quantity > 1) {
                 $createdModels[$modelClass] = (new $modelClass)->newCollection();
@@ -220,20 +265,24 @@ class Populator
      */
     public function seed()
     {
+        $this->addLastModel();
+
         $insertedPKs = [];
 
-        foreach ($this->quantities as $model => $quantity) {
+        foreach ($this->quantities as $modelClass => $quantity) {
             $attributes = [];
             $pivotRecords = [];
             $translations = [];
 
+            $this->modelPopulators[$modelClass]->setGuessedColumnFormatters(true);
+
             for ($i = 0; $i < $quantity; $i++) {
                 list($createdModel, $pivotTables, $currentPivotRecords, $foreignKeys) =
-                    $this->modelPopulators[$model]->getInsertRecords($insertedPKs);
+                    $this->modelPopulators[$modelClass]->getInsertRecords($insertedPKs);
 
                 // If the primary key is not auto incremented, it will be among the inserted attributes.
                 if ($primaryKey = $createdModel->getKey()) {
-                    $insertedPKs[$model][] = $primaryKey;
+                    $insertedPKs[$modelClass][] = $primaryKey;
                 }
 
                 $attributes[] = $createdModel->getAttributes();
@@ -256,8 +305,8 @@ class Populator
                 $createdModel->insert($chunk);
             }
 
-            if (!isset($insertedPKs[$model])) {
-                $insertedPKs[$model] = $this->getInsertedPKs($createdModel, count($attributes));
+            if (!isset($insertedPKs[$modelClass])) {
+                $insertedPKs[$modelClass] = $this->getInsertedPKs($createdModel, count($attributes));
             }
 
             $this->insertPivotRecords(
@@ -265,10 +314,10 @@ class Populator
                 $pivotTables,
                 $pivotRecords,
                 $foreignKeys,
-                $insertedPKs[$model]
+                $insertedPKs[$modelClass]
             );
 
-            $this->insertTranslations($createdModel, $translations, $insertedPKs[$model]);
+            $this->insertTranslations($createdModel, $translations, $insertedPKs[$modelClass]);
         }
 
         $this->forgetAddedModels();
@@ -439,6 +488,16 @@ class Populator
         array $modifiers = []
     ) {
         return $this->add($modelClass, $quantity, $customAttributes, $modifiers)->raw();
+    }
+
+    /**
+     * Get the locales in which to create translations for the added models.
+     *
+     * @return array
+     */
+    public function getLocales()
+    {
+        return $this->locales;
     }
 
     /**

@@ -2,9 +2,7 @@
 
 namespace EloquentPopulator;
 
-use Doctrine\DBAL\Schema\Column;
 use Faker\Generator;
-use Faker\Guesser\Name;
 use Illuminate\Database\Eloquent;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
  */
 class ModelPopulator
 {
-    use PopulatesTranslations;
+    use GuessesColumnFormatters, PopulatesTranslations;
 
     /**
      * The Populator instance.
@@ -71,19 +69,11 @@ class ModelPopulator
     protected $modifiers = [];
 
     /**
-     * Whether Populator is in testing mode.
-     * true when calling create(), make() or raw().
-     *
-     * @var bool
-     */
-    protected $testing;
-
-    /**
      * The owning class of the Morph To relation of the current model instance, if it has one.
      *
-     * @var string|null
+     * @var string|bool
      */
-    protected $morphOwner;
+    protected $morphOwner = false;
 
     /**
      * The factory states to apply.
@@ -107,27 +97,20 @@ class ModelPopulator
      * @param Generator  $generator
      * @param array      $customAttributes
      * @param callable[] $modifiers
-     * @param bool       $testing
-     * @param array|null $locales
      */
     public function __construct(
         Populator $populator,
         Model $model,
         Generator $generator,
         array $customAttributes,
-        array $modifiers,
-        $testing,
-        $locales
+        array $modifiers
     ) {
         $this->populator = $populator;
         $this->model = $model;
         $this->generator = $generator;
-        $this->bootstrapRelations();
-        $this->testing = $testing;
-        $this->guessedFormatters = $this->guessColumnFormatters($model);
         $this->customAttributes = $customAttributes;
         $this->modifiers = $modifiers;
-        $this->locales = $locales;
+        $this->bootstrapRelations();
     }
 
     /**
@@ -148,7 +131,7 @@ class ModelPopulator
      *
      * @return void
      */
-    protected function bootstrapRelations()
+    public function bootstrapRelations()
     {
         $this->relations = $this->getRelations();
 
@@ -184,7 +167,7 @@ class ModelPopulator
                     'belongsToMany',
                     'morphedByMany',
                 ])->contains(function ($relationName) use ($methodCode) {
-                    return stripos($methodCode, '$this->' . $relationName . '(');
+                    return stripos($methodCode, "\$this->$relationName(");
                 });
             })
             ->map(function ($methodName) {
@@ -219,10 +202,10 @@ class ModelPopulator
 
         $methodCode = trim(preg_replace('/\s\s+/', '', $methodCode));
 
-        $begin = strpos($methodCode, 'function(');
-        $length = strrpos($methodCode, '}') - $begin + 1;
+        $start = strpos($methodCode, 'function(');
+        $length = strrpos($methodCode, '}') - $start + 1;
 
-        return substr($methodCode, $begin, $length);
+        return substr($methodCode, $start, $length);
     }
 
     /**
@@ -256,15 +239,14 @@ class ModelPopulator
         $this->pivotPopulators[$relatedClass] = new PivotPopulator(
             $this,
             $relation,
-            $this->generator,
-            $this->guessColumnFormatters($relation)
+            $this->generator
         );
     }
 
     /**
      * Set the number of many-to-many related models to attach.
      * They default to a random number between 0 and the count of the inserted primary keys of the related models
-     * with execute() and seed(), and to the count with create().
+     * with seed(), and to the count with the other methods.
      *
      * @param  array $manyToManyQuantites The quantities indexed by related model class name.
      * @return static
@@ -279,7 +261,7 @@ class ModelPopulator
     }
 
     /**
-     * Override the formatters of the extra attributes of pivot tables.
+     * Set custom attributes that will override the formatters of the extra attributes of pivot tables.
      *
      * @param  array $pivotAttributes The attribute arrays indexed by related model class name.
      * @return static
@@ -294,7 +276,7 @@ class ModelPopulator
     }
 
     /**
-     * Save a possible owning class for a child class in a many-to-one
+     * Save a potential owning class for a child class in a many-to-one
      * or one-to-one polymorphic relation with it,
      * so that the child model will be associated to one of its owners when it is populated.
      *
@@ -307,217 +289,41 @@ class ModelPopulator
     }
 
     /**
-     * Get the columns of a model's table.
+     * Set the guessed column formatters for the model being built.
      *
-     * @param  Model|BelongsToMany $model
-     * @return Column[]
+     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @return void
      */
-    protected function getColumns($model)
+    public function setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
     {
-        $schema = $model->getConnection()->getDoctrineSchemaManager();
-        $platform = $schema->getDatabasePlatform();
-
-        // Prevents a DBALException if the table contains an enum.
-        $platform->registerDoctrineTypeMapping('enum', 'string');
-
-        list($table, $database) = $this->getTableAndDatabase($model);
-
-        return $this->unquoteColumnNames(
-            $schema->listTableColumns($table, $database),
-            $platform->getIdentifierQuoteCharacter()
+        $this->guessedFormatters = $this->getGuessedColumnFormatters(
+            $this->model,
+            $makeNullableColumnsOptionalAndKeepTimestamps
         );
-    }
 
-    /**
-     * Get the table and database names of a model.
-     *
-     * @param  Model $model
-     * @return array
-     */
-    protected function getTableAndDatabase($model)
-    {
-        $table = $model->getConnection()->getTablePrefix() . $model->getTable();
-
-        $database = null;
-
-        if (strpos($table, '.')) {
-            list($database, $table) = explode('.', $table);
+        if ($this->shouldTranslate()) {
+            $this->guessTranslationFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
         }
 
-        return [$table, $database];
+        $this->setGuessedPivotFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
     }
 
     /**
-     * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
+     * Set the guessed column formatters for the extra columns of the pivot tables
+     * of the BelongsToMany relations of the model being built.
      *
-     * @param  array  $columns
-     * @param  string $quoteCharacter
-     * @return array The columns.
+     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @return void
      */
-    protected function unquoteColumnNames(array $columns, $quoteCharacter)
+    public function setGuessedPivotFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
     {
-        foreach ($columns as $columnName => $columnData) {
-            if (starts_with($columnName, $quoteCharacter)) {
-                $columns[substr($columnName, 1, -1)] = array_pull($columns, $columnName);
+        foreach ($this->pivotPopulators as $pivotPopulator) {
+            $pivotPopulator->setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+
+            if ($makeNullableColumnsOptionalAndKeepTimestamps) {
+                $pivotPopulator->attachRandomQuantity();
             }
         }
-
-        return $columns;
-    }
-
-    /**
-     * Get the column formatters based on the columns' names or types or on whether they are a foreign key.
-     *
-     * @param  Model|BelongsToMany $model
-     * @return array
-     */
-    protected function guessColumnFormatters($model)
-    {
-        $formatters = [];
-
-        $columns = $this->getColumns($model);
-
-        $nameGuesser = new Name($this->generator);
-        $columnTypeGuesser = new ColumnTypeGuesser($this->generator);
-
-        foreach ($columns as $columnName => $column) {
-            // Skips autoincremented primary keys.
-            if ($columnName === $this->model->getKeyName() && $column->getAutoincrement()) {
-                continue;
-            }
-
-            // And deleted_at.
-            if (
-                method_exists($this->model, 'getDeletedAtColumn')
-                && $columnName === $this->model->getDeletedAtColumn()
-            ) {
-                continue;
-            }
-
-            // Guesses based on the column's name.
-            if ($formatter = $nameGuesser->guessFormat($columnName, $column->getLength())) {
-                $formatters[$columnName] = $formatter;
-                continue;
-            }
-
-            // If unable to guess by the column's name, guesses based on the column's type.
-            if ($formatter = $columnTypeGuesser->guessFormat($column, $model->getTable())) {
-                $formatters[$columnName] = $formatter;
-            }
-        }
-
-        // Pivot tables and translations shouldn't have their foreign keys associated here.
-        return $model instanceof $this->model ? $this->populateForeignKeys($formatters, $columns) : $formatters;
-    }
-
-    /**
-     * Set the closures that will be used to populate the foreign keys
-     * using the previously added related models.
-     *
-     * @param  array    $formatters
-     * @param  Column[] $columns
-     * @return array The formatters.
-     */
-    protected function populateForeignKeys(array $formatters, array $columns)
-    {
-        foreach ($this->relations as $relation) {
-            if ($relation instanceof MorphTo) {
-                $formatters = $this->associateMorphTo($formatters, $relation);
-            } elseif ($relation instanceof BelongsTo) {
-                $formatters = $this->associateBelongsTo($formatters, $relation, $columns);
-            }
-        }
-
-        return $formatters;
-    }
-
-    /**
-     * Set the closure that will be used to populate the foreign key of a Belongs To relation.
-     *
-     * @param  array         $formatters
-     * @param  BelongsTo     $relation
-     * @param  Column[]|null $columns
-     * @return array The formatters.
-     */
-    protected function associateBelongsTo(array &$formatters, BelongsTo $relation, array $columns = null)
-    {
-        $relatedClass = get_class($relation->getRelated());
-        $foreignKey = $relation->getForeignKey();
-
-        $alwaysAssociate = $this->testing || $columns[$foreignKey]->getNotnull();
-
-        $formatters[$foreignKey] = function ($model, $insertedPKs) use ($relatedClass, $alwaysAssociate) {
-            if (!isset($insertedPKs[$relatedClass])) {
-                return null;
-            }
-
-            if ($alwaysAssociate) {
-                return $this->generator->randomElement($insertedPKs[$relatedClass]);
-            }
-
-            return $this->generator->optional()->randomElement($insertedPKs[$relatedClass]);
-        };
-
-        return $formatters;
-    }
-
-    /**
-     * Set the closure that will be used to populate the foreign key of a Morph To relation.
-     *
-     * @param  array   $formatters
-     * @param  MorphTo $relation
-     * @return array The formatters.
-     */
-    protected function associateMorphTo(array &$formatters, MorphTo $relation)
-    {
-        // Removes the table names from the foreign key and the morph type.
-        $foreignKey = last(explode('.', $relation->getForeignKey()));
-        $morphType = last(explode('.', $relation->getMorphType()));
-
-        $formatters[$foreignKey] = function ($model, $insertedPKs) {
-            if (null === $morphOwner = $this->pickMorphOwner($insertedPKs)) {
-                return null;
-            }
-
-            return $this->generator->randomElement($insertedPKs[$morphOwner]);
-        };
-
-        $formatters[$morphType] = function ($model, $insertedPKs) {
-            if (null === $morphOwner = $this->pickMorphOwner($insertedPKs)) {
-                return null;
-            }
-
-            return (new $morphOwner)->getMorphClass();
-        };
-
-        return $formatters;
-    }
-
-    /**
-     * Select a random owning class for a Morph To relation.
-     *
-     * @param  array[] $insertedPKs
-     * @return string
-     */
-    protected function pickMorphOwner(array $insertedPKs)
-    {
-        $owners = $this->populator->getMorphToClasses(get_class($this->model));
-
-        // We'll share the information of the chosen owner between the 2 closures by setting it in $this.
-
-        if ($this->morphOwner) {
-            return tap($this->morphOwner, function () {
-                // We'll set the picked owner to null, so it will be picked again randomly on the next iteration.
-                $this->morphOwner = null;
-            });
-        }
-
-        // Filters the owning classes that have been added to Populator.
-        $owners = array_filter($owners, function ($owner) use ($insertedPKs) {
-            return isset($insertedPKs[$owner]);
-        });
-
-        return $this->morphOwner = $this->generator->randomElement($owners);
     }
 
     /**
@@ -528,18 +334,14 @@ class ModelPopulator
      * @param  bool    $keepTimestamps
      * @return Model
      */
-    public function run(array $insertedPKs, $persist, $keepTimestamps = false)
+    public function run(array $insertedPKs, $persist)
     {
         // This method has a different name just to allow chaning execute() after add().
 
-        if (!$keepTimestamps) {
-            $this->unsetTimestamps();
-        }
-
         $this->model = new $this->model;
 
-        // Creating the translations before filling the model allows setting custom
-        // attributes for the main model in the form of attribute:locale,
+        // We'll create the translations before filling the model to allow setting
+        // custom attributes for the main model in the form of attribute:locale,
         // e.g. name:de, without having them overwritten.
         if ($this->shouldTranslate()) {
             $this->translate($insertedPKs);
@@ -561,31 +363,14 @@ class ModelPopulator
     }
 
     /**
-     * Unset the timestamps' guessed formatters.
-     *
-     * @return void
-     */
-    protected function unsetTimestamps()
-    {
-        // Note that we can't just avoid setting the timestamps' formatters because they are needed by seed(),
-        // and when the models are added it's still unknown what method will be called.
-        unset(
-            $this->guessedFormatters[$this->model->getCreatedAtColumn()],
-            $this->guessedFormatters[$this->model->getUpdatedAtColumn()]
-        );
-    }
-
-    /**
      * Fill a model using the available attributes.
      *
      * @param  Model   $model
      * @param  array[] $insertedPKs
      * @return void
      */
-    protected function fillModel(
-        Model $model,
-        array $insertedPKs
-    ) {
+    protected function fillModel(Model $model, array $insertedPKs)
+    {
         $attributes = $this->mergeAttributes($model);
 
         // To maximize the number of attributes already set in the
@@ -603,7 +388,7 @@ class ModelPopulator
             }
         }
 
-        // We'll set the remaining attributes while evaluating the closures,
+        // We'll set the remaining attributes as we evaluate the closures,
         // so that the model will have the return values of previous closures already set.
         foreach ($closureAttributes as $key => $value) {
             $model->$key = $value($model, $insertedPKs);
@@ -637,8 +422,9 @@ class ModelPopulator
      */
     protected function getFactoryAttributes(Model $model)
     {
-        // We want to allow developers to specify attributes for single locales in their factory definitions
-        // with the attribute:locale syntax, but the factory has no rawWithStates() method,
+        // This package allows developers to specify attributes for single locales
+        // in their factory definitions with the attribute:locale syntax,
+        // but the Eloquent\FactoryBuilder's raw() method interprets them as regular attributes,
         // and if we were to make() the model and then call getAttribute() everytime,
         // such attributes would cause Translatable to run a query for each model instance.
         // We'll resort to binding a closure to the factory to get the defined states,
@@ -723,7 +509,7 @@ class ModelPopulator
      */
     public function getInsertRecords(array $insertedPKs)
     {
-        $this->run($insertedPKs, false, true);
+        $this->run($insertedPKs, false);
 
         $tables = [];
         $pivotRecords = [];
@@ -751,7 +537,13 @@ class ModelPopulator
      */
     public function raw($customAttributes = [])
     {
-        // We actually need to make() the model first since closures attributes receive the model instance.
+        // If the first argument is a string, we'll assume it's the class name
+        // of a different model to create.
+        if (is_string($customAttributes)) {
+            return $this->populator->raw(...func_get_args());
+        }
+
+        // We need to make() the model first since closures attributes receive the model instance.
         return $this->make($customAttributes)->toArray();
     }
 
@@ -763,8 +555,6 @@ class ModelPopulator
      */
     public function create($customAttributes = [])
     {
-        // If the first argument is a string, we'll assume it's the class name
-        // of a different model to create.
         if (is_string($customAttributes)) {
             return $this->populator->create(...func_get_args());
         }
@@ -785,37 +575,13 @@ class ModelPopulator
             return $this->populator->make(...func_get_args());
         }
 
-        $this->testing = true;
-
         // This condition prevents the overwriting of the custom attributes
         // thay may have been passed to add().
         if ($customAttributes) {
             $this->customAttributes = $customAttributes;
         }
 
-        $this->associateNullableForeignKeys();
-
-        $this->populator->addOwners($this->getOwners());
-
         return last($this->populator->execute($persist));
-    }
-
-    /**
-     * Create owning models even if their foreign keys are nullable.
-     *
-     * @return void
-     */
-    protected function associateNullableForeignKeys()
-    {
-        // When calling create(), make() or raw(), foreign keys are populated even if nullable,
-        // so models created for testing have predictable foreign key values.
-        // However, when the formatters are guessed it's still unknown whether create(), make(), execute() or seed()
-        // will be called, so we'll override the foreign key formatters in question now.
-        // There's no need to do this for the ModelPopulators of owning models,
-        // since they will be passed $testing = true on construction.
-        foreach ($this->belongsToRelations() as $relation) {
-            $this->associateBelongsTo($this->guessedFormatters, $relation);
-        }
     }
 
     /**
@@ -838,16 +604,6 @@ class ModelPopulator
                 return get_class($relation->getRelated());
             })
             ->all();
-    }
-
-    /**
-     * Determine if Populator is in testing mode.
-     *
-     * @return bool
-     */
-    public function isTesting()
-    {
-        return $this->testing;
     }
 
     /**

@@ -11,19 +11,31 @@ use EloquentPopulator\Models\Video;
 
 class PivotTest extends PopulatorTestCase
 {
-    public function testExecuteAssociatesRandomQuantityOfManyToManyRelated()
+    public function testExecuteDoesntMakeNullableExtraPivotColumnsOptional()
+    {
+        $this->populator->add(Role::class, 10)->add(User::class, 10)->execute();
+
+        $this->assertFalse($this->app['db']->table('role_user')->whereNull('expires_at')->exists());
+    }
+
+    public function testSeedMakesNullableExtraPivotColumnsOptional()
+    {
+        $this->populator->add(Role::class, 10)->add(User::class, 10)->seed();
+
+        $this->assertTrue($this->app['db']->table('role_user')->whereNull('expires_at')->exists());
+        $this->assertTrue($this->app['db']->table('role_user')->whereNotNull('expires_at')->exists());
+    }
+
+    public function testSeedAssociatesRandomQuantityOfManyToManyRelated()
     {
         // Will fail if the count of the attached records happens to be 0 or 200.
-        //
-        // This also tests that the extra column "expires_at" is automatically populated,
-        // because if it wasn't an exception would be thrown since it has no default value.
 
         $this->populator
             ->add(Role::class, 200)
             // Adds 2 users in case something wrong happens with multiple ones.
             ->add(User::class, 2);
 
-        $user = $this->populator->execute()[User::class][1];
+        $user = User::find($this->populator->seed()[User::class][0]);
 
         $this->assertThat(
             $user->roles()->count(),
@@ -34,7 +46,7 @@ class PivotTest extends PopulatorTestCase
         );
     }
 
-    public function testCreateAssociatesAllManyToManyRelated()
+    public function testExecuteAssociatesAllManyToManyRelated()
     {
         $user = $this->populator
             ->add(Role::class, 5)
@@ -97,7 +109,7 @@ class PivotTest extends PopulatorTestCase
 
         $this->populator
             ->add(Role::class, 50)
-            ->add(User::class, 50)->attachQuantities([Role::class => 50])
+            ->add(User::class, 50, ['company_id' => null])->attachQuantities([Role::class => 50])
             ->seed();
 
         // Only the models require an extra query to fetch their IDs.
