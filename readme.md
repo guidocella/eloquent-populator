@@ -97,8 +97,8 @@ Finally, call `seed` to populate the database with the added models.
  
  ```php
 $populator->add(User::class, 10)
-          ->add(Post::class, 5)
-          ->seed();
+           ->add(Post::class, 5)
+           ->seed();
  ```
 
 If a column that wasn't overridden is nullable, each value inserted by `seed` will have a 50% of being set to null or to the guessed formatter.
