@@ -112,7 +112,7 @@ Even though it bulk inserts the models, timestamps are still populated with rand
 If you want the events to be dispatched, you can use `execute()` as an alternative to `seed()`. It creates the added models one by one, and returns all the created models or collections, depending on whether their quantity was 1 or greater, indexed by model class name.
 
 ```php
-$createdModels = $populator->add(User::class, 10)
+$createdModels = $populator->add(User::class)
                            ->add(Post::class, 5)
                            ->execute();
 
