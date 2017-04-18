@@ -2,7 +2,6 @@
 
 namespace EloquentPopulator;
 
-use Carbon\Carbon;
 use EloquentPopulator\Models\Club;
 use EloquentPopulator\Models\Company;
 use EloquentPopulator\Models\Post;
@@ -170,6 +169,14 @@ class PopulatorTest extends PopulatorTestCase
                 $mock->intMethod($insertedPKs[Video::class][0]);
             },
         ]);
+    }
+
+    public function testDoesntRecreatePreviouslyAddedModels()
+    {
+        $this->populator->create(Club::class);
+        $this->populator->create(Company::class);
+
+        $this->assertSame(1, Club::count());
     }
 
     public function testMakeDoesntSetTimestamps()

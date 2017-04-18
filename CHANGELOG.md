@@ -1,3 +1,7 @@
+## v2.0.1 (2017-04-18)
+
+- Prevented previously added models from being recreated.
+
 ## v2.0 (2017-03-26)
 
 - `seed` sets nullable columns to either null or the guessed formatter

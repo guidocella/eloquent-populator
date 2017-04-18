@@ -256,6 +256,8 @@ class Populator
     protected function forgetAddedModels()
     {
         $this->quantities = $this->modelPopulators = [];
+
+        $this->lastModelPopulator = $this->lastModelClass = null;
     }
 
     /**
