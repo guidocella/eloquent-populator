@@ -177,6 +177,10 @@ class PivotPopulator
      */
     public function execute(Model $currentParent, array $insertedPKs)
     {
+        if (!isset($insertedPKs[$this->relatedClass])) {
+            return;
+        }
+
         $this->updateParentKey($currentParent);
 
         $values = [];

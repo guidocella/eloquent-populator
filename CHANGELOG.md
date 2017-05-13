@@ -1,3 +1,7 @@
+## v2.0.2 (2017-05-13)
+
+- Prevented error with BelongsTo and BelongsToMany relations to the same model
+
 ## v2.0.1 (2017-04-18)
 
 - Prevented previously added models from being recreated

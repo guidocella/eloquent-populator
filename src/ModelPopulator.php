@@ -516,6 +516,10 @@ class ModelPopulator
         $foreignKeys = [];
 
         foreach ($this->pivotPopulators as $relatedClass => $pivotPopulator) {
+            if (!isset($insertedPKs[$relatedClass])) {
+                continue;
+            }
+
             list($table, $pivotRecordsOfOneRelation, $foreignKey) = $pivotPopulator->getInsertRecords(
                 $this->model,
                 $insertedPKs

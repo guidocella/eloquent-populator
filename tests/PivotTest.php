@@ -103,6 +103,16 @@ class PivotTest extends PopulatorTestCase
         $this->assertSame('2000-01-11', $user->roles[0]->pivot->expires_at);
     }
 
+    public function testBelongsToAndBelongsToManyOfSameModel_withExecute()
+    {
+        $this->populator->create(User::class);
+    }
+
+    public function testBelongsToAndBelongsToManyOfSameModel_withSeed()
+    {
+        $this->populator->add(User::class)->seed();
+    }
+
     public function testSeedRunsOneInsertPer500PivotRows()
     {
         $this->app['db']->enableQueryLog();

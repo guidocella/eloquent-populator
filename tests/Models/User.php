@@ -22,4 +22,9 @@ class User extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class);
+    }
 }
