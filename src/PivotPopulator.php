@@ -290,8 +290,6 @@ class PivotPopulator
             $bulkInsertRecords[] = array_merge($relatedKeyArray, $this->getExtraAttributes($insertedPKs, $currentParent));
         }
 
-        // A model's inverse MorphToMany relations use the same pivot table,
-        // so we have to return the related class as well to differentiate them.
-        return [$this->relatedClass, $table, $bulkInsertRecords, $this->getForeignKeyName()];
+        return [$table, $bulkInsertRecords, $this->getForeignKeyName()];
     }
 }

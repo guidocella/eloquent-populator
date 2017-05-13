@@ -515,12 +515,14 @@ class ModelPopulator
         $pivotRecords = [];
         $foreignKeys = [];
 
-        foreach ($this->pivotPopulators as $pivotPopulator) {
-            list($relatedClass, $table, $pivotRecordsOfOneRelation, $foreignKey) = $pivotPopulator->getInsertRecords(
+        foreach ($this->pivotPopulators as $relatedClass => $pivotPopulator) {
+            list($table, $pivotRecordsOfOneRelation, $foreignKey) = $pivotPopulator->getInsertRecords(
                 $this->model,
                 $insertedPKs
             );
 
+            // A model's inverse MorphToMany relations use the same pivot table,
+            // so we have to use the related class as index to differentiate them.
             $tables[$relatedClass] = $table;
             $pivotRecords[$relatedClass] = $pivotRecordsOfOneRelation;
             $foreignKeys[$relatedClass] = $foreignKey;
