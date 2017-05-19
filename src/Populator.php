@@ -338,7 +338,7 @@ class Populator
     {
         $primaryKeyName = $createdModel->getKeyName();
 
-        return $createdModel->withoutGlobalScopes()
+        return $createdModel->newQueryWithoutScopes()
                             ->take($insertedCount)
                             ->latest($primaryKeyName)
                             ->pluck($primaryKeyName)
