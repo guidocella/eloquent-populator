@@ -1,3 +1,7 @@
+## v2.0.3 (2017-05-29)
+
+- Prevented "Too many connections" errors when running many tests by closing the Doctrine connections
+
 ## v2.0.2 (2017-05-13)
 
 - Prevented error with BelongsTo and BelongsToMany relations to the same model
