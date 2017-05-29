@@ -245,6 +245,8 @@ class Populator
         // Foo won't be created twice.
         $this->forgetAddedModels();
 
+        $this->closeDoctrineConnections();
+
         return $createdModels;
     }
 
@@ -258,6 +260,21 @@ class Populator
         $this->quantities = $this->modelPopulators = [];
 
         $this->lastModelPopulator = $this->lastModelClass = null;
+    }
+
+    /**
+     * Close all Doctrine connections in order to prevent "Too many connections"
+     * errors when running many tests.
+     *
+     * @return void
+     */
+    protected function closeDoctrineConnections()
+    {
+        foreach (app('db')->getConnections() as $connection) {
+            call_user_func(\Closure::bind(function () {
+                $this->doctrineConnection = null;
+            }, $connection, $connection));
+        }
     }
 
     /**
@@ -323,6 +340,8 @@ class Populator
         }
 
         $this->forgetAddedModels();
+
+        $this->closeDoctrineConnections();
 
         return $insertedPKs;
     }
