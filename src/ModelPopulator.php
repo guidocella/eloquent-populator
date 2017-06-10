@@ -48,13 +48,6 @@ class ModelPopulator
     protected $relations;
 
     /**
-     * The model's columns' guessed formatters.
-     *
-     * @var (\Closure|null)[]
-     */
-    protected $guessedFormatters = [];
-
-    /**
      * Custom attributes for the model.
      *
      * @var array

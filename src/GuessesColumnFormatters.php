@@ -12,6 +12,13 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 trait GuessesColumnFormatters
 {
     /**
+     * The model's or pivot table's columns' guessed formatters.
+     *
+     * @var (\Closure|null)[]
+     */
+    protected $guessedFormatters = [];
+
+    /**
      * Guess the column formatters based on the columns' names or types or on whether they are a foreign key.
      *
      * @param  Model|BelongsToMany $model
@@ -68,7 +75,8 @@ trait GuessesColumnFormatters
 
         // Pivot tables and translations shouldn't have their foreign keys associated here.
         return $model instanceof Model && !$this->isTranslation($model) ?
-            $this->populateForeignKeys($formatters, $columns, $makeNullableColumnsOptionalAndKeepTimestamps) : $formatters;
+            $this->populateForeignKeys($formatters, $columns, $makeNullableColumnsOptionalAndKeepTimestamps)
+            : $formatters;
     }
 
     /**

@@ -47,13 +47,6 @@ class PivotPopulator
     protected $quantity;
 
     /**
-     * The guessed formatters of the extra attributes of the pivot table.
-     *
-     * @var (\Closure|null)[]
-     */
-    protected $guessedFormatters = [];
-
-    /**
      * Custom attributes for the pivot table.
      *
      * @var array
