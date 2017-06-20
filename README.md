@@ -12,7 +12,7 @@ This is a package to populate Laravel's Eloquent ORM's models by guessing the be
     - [Belongs To Many](#belongs-to-many)
 - [Model Factory integration](#model-factory-integration)
 - [Testing](#testing)
-- [Laravel Multilingual/Translatable integration](#laravel-multilingual/translatable-integration)
+- [Laravel Multilingual/Translatable integration](#laravel-multilingualtranslatable-integration)
 
 ## Installation
 
