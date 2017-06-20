@@ -156,12 +156,12 @@ class PopulatorTest extends PopulatorTestCase
     {
         $mock = $this->getMockBuilder('stdClass')->setMethods(['stringMethod', 'intMethod'])->getMock();
 
-        $mock->expects($this->once())->method('stringMethod')->with($this->equalTo('Overridden string'));
+        $mock->expects($this->once())->method('stringMethod')->with($this->equalTo('custom string'));
         $mock->expects($this->once())->method('intMethod')->with($this->equalTo(1));
 
         $this->populator->add(Video::class);
 
-        $this->populator->make(User::class, 1, ['string' => 'Overridden string'], [
+        $this->populator->make(User::class, 1, ['string' => 'custom string'], [
             function ($model) use ($mock) {
                 $mock->stringMethod($model->string);
             },

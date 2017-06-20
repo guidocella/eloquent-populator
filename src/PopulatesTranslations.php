@@ -22,18 +22,31 @@ trait PopulatesTranslations
     protected $guessedTranslationFormatters = [];
 
     /**
-     * Custom attributes for the translations.
+     * The custom translatable attributes.
      *
      * @var array
      */
-    protected $customTranslationAttributes = [];
+    protected $customTranslatableAttributes = [];
 
     /**
-     * The factory states to apply to the translations.
+     * The factory states to apply to the translation models.
      *
      * @var string[]
      */
     protected $translationStates = [];
+
+    /**
+     * Override the formatters of the translable attributes.
+     *
+     * @param  array $translatedAttributes
+     * @return static
+     */
+    public function translatedAttributes(array $translatedAttributes)
+    {
+        $this->customTranslatableAttributes = $translatedAttributes;
+
+        return $this;
+    }
 
     /**
      * Override the formatters of the translation model.
@@ -43,9 +56,7 @@ trait PopulatesTranslations
      */
     public function translationAttributes(array $translationAttributes)
     {
-        $this->customTranslationAttributes = $translationAttributes;
-
-        return $this;
+        return $this->translatedAttributes($translationAttributes);
     }
 
     /**
@@ -76,21 +87,64 @@ trait PopulatesTranslations
     }
 
     /**
-     * Determine if the model should be translated.
+     * Determine if the model should be Dimsav-translated.
      *
      * @return bool
      */
-    protected function shouldTranslate()
+    protected function dimsavTranslatable()
     {
         return $this->getLocales() && in_array(Translatable::class, class_uses($this->model));
     }
 
     /**
+     * Set the guessed formatters of the translated attributes.
+     *
+     * @return void
+     */
+    public function guessMultilingualFormatters()
+    {
+        if (!isset($this->model->translatable)) {
+            return;
+        }
+
+        foreach ($this->model->translatable as $translatableAttributeKey) {
+            $this->guessedFormatters[$translatableAttributeKey] = function () use ($translatableAttributeKey) {
+                return collect($this->getRawLocales())
+                    ->mapWithKeys(function ($locale) use ($translatableAttributeKey) {
+                        return [$locale => $this->getTranslatableAttribute($translatableAttributeKey, $locale)];
+                    })
+                    ->all();
+            };
+        }
+    }
+
+    /**
+     * Get the value for a translated attribute in one locale.
+     *
+     * @param  string $translatableAttributeKey
+     * @param  string $locale
+     * @return mixed
+     */
+    public function getTranslatableAttribute($translatableAttributeKey, $locale)
+    {
+        if (array_key_exists($translatableAttributeKey, $this->customTranslatableAttributes)) {
+            return $this->customTranslatableAttributes[$translatableAttributeKey];
+        }
+
+        if (array_key_exists("$translatableAttributeKey->$locale", $this->customAttributes)) {
+            return $this->customAttributes["$translatableAttributeKey->$locale"];
+        }
+
+        return $this->generator->sentence;
+    }
+
+    /**
      * Set the guessed formatters of the translation model.
      *
-     * @param bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @return void
      */
-    protected function guessTranslationFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    protected function guessDimsavFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
     {
         // Don't use Translatable::getNewTranslation()
         // because it runs a query every first time it accesses $model->translations.
@@ -133,7 +187,7 @@ trait PopulatesTranslations
     }
 
     /**
-     * Determine if a model is the main model or its translation.
+     * Determine if a model is the main model or one of its translation.
      *
      * @param  Model $model
      * @return bool
@@ -154,11 +208,9 @@ trait PopulatesTranslations
             return [];
         }
 
-        $rawLocales = $this->locales ?: $this->populator->getLocales() ?: [];
-
         $locales = [];
 
-        foreach ($rawLocales as $key => $value) {
+        foreach ($this->getRawLocales() as $key => $value) {
             if (is_string($value)) {
                 $locales[] = $value;
             } else {
@@ -171,5 +223,16 @@ trait PopulatesTranslations
         }
 
         return $locales;
+    }
+
+    /**
+     * Get the locales to translate in without any further processing.
+     * e.g. ['en', 'es' => ['MX', 'CO']] without expanding the country based locales.
+     *
+     * @return array
+     */
+    protected function getRawLocales()
+    {
+        return $this->locales ?: $this->populator->getLocales() ?: [];
     }
 }

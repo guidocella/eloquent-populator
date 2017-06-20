@@ -13,7 +13,8 @@
     "require-dev": {
         "laravel/laravel": "5.4.*",
         "dimsav/laravel-translatable": "^6",
-        "phpunit/phpunit": "^5"
+        "phpunit/phpunit": "^5",
+        "themsaid/laravel-multilingual": "^1"
     },
     "autoload": {
         "psr-4": {

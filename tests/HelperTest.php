@@ -49,8 +49,8 @@ class HelperTest extends PopulatorTestCase
 
     public function testPassingCustomAttributesToMake()
     {
-        $user = populator(User::class)->make(['email' => 'Overridden email']);
+        $user = populator(User::class)->make(['email' => 'custom email']);
 
-        $this->assertSame('Overridden email', $user->email);
+        $this->assertSame('custom email', $user->email);
     }
 }

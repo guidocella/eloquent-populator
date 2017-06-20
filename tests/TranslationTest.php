@@ -40,10 +40,9 @@ class TranslationTest extends PopulatorTestCase
 
     public function testTranslateIn()
     {
-        $this->populator
-            ->translateIn(['en'])
-            ->add(Product::class)->translateIn(['en', 'es-MX',])
-            ->add(Role::class);
+        $this->populator->translateIn(['en'])
+                        ->add(Product::class)->translateIn(['en', 'es-MX',])
+                        ->add(Role::class);
 
         $models = $this->populator->execute();
 
@@ -56,7 +55,7 @@ class TranslationTest extends PopulatorTestCase
     {
         $product = $this->populator->add(Product::class)->translateIn([])->make();
 
-        $this->assertSame([], $product->translations->pluck('locale')->all());
+        $this->assertSame([], $product->translations->all());
     }
 
     public function testCustomTranslationAttributes_forOneLocale()

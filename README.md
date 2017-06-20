@@ -12,7 +12,7 @@ This is a package to populate Laravel's Eloquent ORM's models by guessing the be
     - [Belongs To Many](#belongs-to-many)
 - [Model Factory integration](#model-factory-integration)
 - [Testing](#testing)
-- [Laravel-Translatable integration](#laravel-translatable-integration)
+- [Laravel Multilingual/Translatable integration](#laravel-multilingual/translatable-integration)
 
 ## Installation
 
@@ -263,16 +263,16 @@ populator(User::class)->make(); // Same as $populator->add(User::class)->make()
 
 populator(User::class, 'admin')->create();
 
-populator(User::class, 10)->make(['name' => 'Overridden name']);
+populator(User::class, 10)->make(['name' => 'custom name']);
 
-populator(User::class, 'admin', 10)->create(['name' => 'Overridden name']);
+populator(User::class, 'admin', 10)->create(['name' => 'custom name']);
 ```
 
 `add` returns an instance of `EloquentPopulator\ModelPopulator` which manages single models and has these `make` and `create` methods that accept only the custom attributes. But you can also call `make` and `create` directly on `EloquentPopulator\Populator` as a shortcut. The `make` and `create` in `EloquentPopulator\Populator` have the same signature as `add`.
 
 ```php
-$post = $populator->make(Post::class, ['content' => 'Overridden content']);
-// Same as $populator->add(Post::class)->make(['content' => 'Overridden content'])
+$post = $populator->make(Post::class, ['content' => 'custom content']);
+// Same as $populator->add(Post::class)->make(['content' => 'custom content'])
 
 $users = $populator->create(User::class, 10);
 ```
@@ -367,52 +367,53 @@ $user = populator()->add(Role::class, 20)
                    ->create();
 ```
 
-## Laravel-Translatable integration
+## Laravel Multilingual/Translatable integration
 
-If a model uses the `Dimsav\Translatable\Translatable` trait, Populator will create its translations in all of the configured languages. 
-
+If a model uses the `Themsaid\Multilingual\Translatable` or the `Dimsav\Translatable\Translatable` trait, Populator will translate it in all of their configured languages.
+ 
 ```php
-config(['translatable.locales' => ['en', 'es']]);
 
 $product = populator(Product::class)->create();
 
-$product->{'name:en'}; // "Fuga voluptas illo qui voluptates aut ipsam."
-$product->{'name:es'}; // "Nulla vero qui magni quo aut quo."
+// Let's assume en is the current locale.
+$product->name; // "Fuga voluptas illo qui voluptates aut ipsam."
+
+$product->nameTranslations->es; // "Nulla vero qui magni quo aut quo." (Multilingual)
+$product->{'name:es'}; // "Nulla vero qui magni quo aut quo." (Translatable)
 ```
 
-When using `make` the translations will still be created, but they won't be saved to the database.
-
-### Choosing the languages
-
-If you don't want to translate in all of your available languages, pass an array with the locales in which you want the translations to be created in to `translateIn`. If you don't want any translation, pass an empty array.
-
-```php
-$populator->translateIn(['en']);
-
-$product = populator(Product::class)->make();
-
-$product->translations; // Only the English translation.
-```
-
-Calling `translateIn` on Populator sets the default locales, but you can also chain it from `add` to set the locales only for a certain model. 
-
-```php
-$populator->translateIn([])
-          ->add(Product) // No ProductTranslation will be created.
-          ->add(Role::class)->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
-          ->execute();
-```
+When using `make` with Laravel Translatable the translations will still be created, but they won't be saved to the database.
 
 ### Overriding translation formatters
 
-#### Of one locale
+### Of one locale
 
-You can override the formatters of one locale with Translatable's attribute:locale syntax from the main model's custom attributes or factory definition/states. Of course, you can omit :locale for the current locale.
+#### Multilingual
+
+You can override the formatters of one locale with Laravel's attribute->locale JSON syntax from the custom attributes or factory definition/states.
 
 ```php
 $factory->define(Product::class, function () {
     return [
-        'name' => 'English name'
+        'name->en' => 'English name'
+    ];
+});
+
+$product = populator(Product::class)->make(['name->es' => 'Spanish name']);
+
+$product->name; // "English name"
+$product->nameTranslations->es; // "Spanish name"
+$product->nameTranslations->fr; // "Omnis ex soluta omnis."
+```
+
+#### Translatable
+
+You can override the formatters of one locale with Translatable's attribute:locale syntax from the main model's custom attributes or factory definition/states. :locale can be omitted for the current locale.
+
+```php
+$factory->define(Product::class, function () {
+    return [
+        'name'     => 'English name';
     ];
 });
 
@@ -423,36 +424,67 @@ $product->{'name:es'}; // "Spanish name"
 $product->{'name:fr'}; // "Omnis ex soluta omnis."
 ```
 
-#### Of all locales
+### Of all locales
+
+#### Multilingual
+
+You can override the formatters of all locales with `translatedAttributes`.
+
+```php
+$product = populator(Product::class)->translatedAttributes(['name' => 'custom name'])->make();
+
+$product->name; // "custom name"
+$product->nameTranslations->es; // "custom name"
+``` 
+
+#### Translatable
 
 You can override the formatters of all the translations with `translationAttributes`, or through the translation model's factory definition/states, which are merged like those of regular models.
 
 ```php
-$product = populator(Product::class)->translationAttributes(['name' => 'Overridden name'])->make();
+$product = populator(Product::class)->translationAttributes(['name' => 'custom name'])->make();
 
-$product->{'name:en'}; // "Overridden name"
-$product->{'name:es'}; // "Overridden name"
+$product->{'name:en'}; // "custom name"
+$product->{'name:es'}; // "custom name"
 ``` 
 
 ```php
 $factory->define(ProductTranslation::class, function () {
-    return ['name' => 'Overridden name'];
+    return ['name' => 'custom name'];
 });
 
 $product = populator(Product::class)->make();
 
-$product->{'name:en'}; // "Overridden name"
-$product->{'name:es'}; // "Overridden name"
+$product->{'name:en'}; // "custom name"
+$product->{'name:es'}; // "custom name"
 ```
 
 To apply states to the translation model, use `translationStates`.
 
 ```php
-$factory->state(ProductTranslation::class, 'laravel', function () {
-    return ['name' => 'Laravel'];
-});
+$factory->state(ProductTranslation::class, 'laravel', ['name' => 'Laravel']);
 
-$product = populator(Product::class)->translationStates('laravel')->make();
+populator(Product::class)->translationStates('laravel')->make()->name; // "Laravel"
+```
 
-$product->name; // "Laravel"
+### Choosing the languages
+
+If you don't want to translate in all of your available languages, pass an array with the locales in which you want the translations to be created in to `translateIn`. If you don't want any translation, pass an empty array.
+
+```php
+$populator->translateIn(['en']);
+
+$product = populator(Product::class)->make();
+
+$product->toArray()['name']; // Only the en key. (Multilingual)
+$product->translations; // Only the English translation. (Translatable)
+```
+
+Calling `translateIn` on Populator sets the default locales, but you can also chain it from `add` to set the locales only for a certain model. 
+
+```php
+$populator->translateIn([])
+          ->add(Product) // Product won't be translated.
+          ->add(Role::class)->translateIn(['en', 'es']); // Role will be translated in English and Spanish.
+          ->execute();
 ```

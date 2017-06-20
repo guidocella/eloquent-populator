@@ -176,13 +176,13 @@ class PivotPopulator
 
         $this->updateParentKey($currentParent);
 
-        $values = [];
-
-        foreach ($this->pickRelatedIds($insertedPKs) as $relatedId) {
-            $values[$relatedId] = $this->getExtraAttributes($insertedPKs, $currentParent);
-        }
-
-        $this->relation->attach($values);
+        $this->relation->attach(
+            collect($this->pickRelatedIds($insertedPKs))
+                ->mapWithKeys(function ($relatedId) use ($insertedPKs, $currentParent) {
+                    return [$relatedId => $this->getExtraAttributes($insertedPKs, $currentParent)];
+                })
+                ->all()
+        );
     }
 
     /**

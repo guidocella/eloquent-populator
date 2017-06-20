@@ -294,8 +294,10 @@ class ModelPopulator
             $makeNullableColumnsOptionalAndKeepTimestamps
         );
 
-        if ($this->shouldTranslate()) {
-            $this->guessTranslationFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+        if ($this->dimsavTranslatable()) {
+            $this->guessDimsavFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+        } else {
+            $this->guessMultilingualFormatters();
         }
 
         $this->setGuessedPivotFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
@@ -336,7 +338,7 @@ class ModelPopulator
         // We'll create the translations before filling the model to allow setting
         // custom attributes for the main model in the form of attribute:locale,
         // e.g. name:de, without having them overwritten.
-        if ($this->shouldTranslate()) {
+        if ($this->dimsavTranslatable()) {
             $this->translate($insertedPKs);
         }
 
@@ -403,7 +405,7 @@ class ModelPopulator
         return array_merge(
             $isTranslation ? $this->guessedTranslationFormatters : $this->guessedFormatters,
             $factoryAttributes,
-            $isTranslation ? $this->customTranslationAttributes : $this->customAttributes
+            $isTranslation ? $this->customTranslatableAttributes : $this->customAttributes
         );
     }
 

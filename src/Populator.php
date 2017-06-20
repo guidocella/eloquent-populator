@@ -75,7 +75,7 @@ class Populator
     {
         $this->generator = $generator;
 
-        $this->locales = config('translatable.locales');
+        $this->locales = config('multilingual.locales', config('translatable.locales'));
     }
 
     /**
