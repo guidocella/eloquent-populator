@@ -1,3 +1,7 @@
+## v2.1 (2017-06-20)
+
+- Added Laravel Multilingual support
+
 ## v2.0.3 (2017-05-29)
 
 - Prevented "Too many connections" errors when running many tests by closing the Doctrine connections
