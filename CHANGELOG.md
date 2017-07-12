@@ -1,3 +1,7 @@
+## v2.1.1 (2017-07-12)
+
+- Avoided inserting virtual columns
+
 ## v2.1 (2017-06-20)
 
 - Added Laravel Multilingual support
