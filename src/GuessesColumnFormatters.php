@@ -95,10 +95,17 @@ trait GuessesColumnFormatters
 
         list($table, $database) = $this->getTableAndDatabase($model);
 
-        return $this->unquoteColumnNames(
-            $schema->listTableColumns($table, $database),
-            $platform->getIdentifierQuoteCharacter()
+        $columns = $model->getConnection()->getDoctrineConnection()->fetchAll(
+            $platform->getListTableColumnsSQL($table, $database)
         );
+
+        $columns = $this->rejectVirtualColumns($columns);
+
+        $columns = call_user_func(\Closure::bind(function () use ($table, $database, $columns) {
+            return $this->_getPortableTableColumnList($table, $database, $columns);
+        }, $schema, $schema));
+
+        return $this->unquoteColumnNames($columns, $platform->getIdentifierQuoteCharacter());
     }
 
     /**
@@ -118,6 +125,19 @@ trait GuessesColumnFormatters
         }
 
         return [$table, $database];
+    }
+
+    /**
+     * If the database driver is MySql/MariaDB, filter out any virtual column.
+     *
+     * @param  array $columns
+     * @return array The columns.
+     */
+    protected function rejectVirtualColumns(array $columns)
+    {
+        return array_filter($columns, function ($column) {
+            return !isset($column['Extra']) || !str_contains($column['Extra'], 'VIRTUAL');
+        });
     }
 
     /**
