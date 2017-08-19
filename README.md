@@ -372,7 +372,6 @@ $user = populator()->add(Role::class, 20)
 If a model uses the `Themsaid\Multilingual\Translatable` or the `Dimsav\Translatable\Translatable` trait, Populator will translate it in all of their configured languages.
  
 ```php
-
 $product = populator(Product::class)->create();
 
 // Let's assume en is the current locale.
