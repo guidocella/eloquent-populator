@@ -475,7 +475,7 @@ $populator->translateIn(['en']);
 
 $product = populator(Product::class)->make();
 
-$product->toArray()['name']; // Only the en key. (Multilingual)
+$product->nameTranslations->toArray(); // Only the en key. (Multilingual)
 $product->translations; // Only the English translation. (Translatable)
 ```
 
