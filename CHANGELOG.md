@@ -1,3 +1,7 @@
+## v2.1.2 (2017-08-30)
+
+- Added Laravel 5.5 support
+
 ## v2.1.1 (2017-07-12)
 
 - Avoided inserting virtual columns

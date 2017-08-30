@@ -140,9 +140,13 @@ class PivotPopulator
      */
     protected function getForeignKeyName()
     {
-        $method = method_exists($this->relation, 'getQualifiedForeignKeyName')
-            ? 'getQualifiedForeignKeyName' // Laravel >=5.4
-            : 'getForeignKey';
+        if (method_exists($this->relation, 'getQualifiedForeignPivotKeyName')) {
+            $method = 'getQualifiedForeignPivotKeyName'; // Laravel 5.5
+        } elseif (method_exists($this->relation, 'getQualifiedForeignKeyName')) {
+            $method = 'getQualifiedForeignKeyName'; // Laravel 5.4
+        } else {
+            $method = 'getForeignKey'; // Laravel 5.3
+        };
 
         return last(explode('.', $this->relation->$method()));
     }
@@ -154,11 +158,15 @@ class PivotPopulator
      */
     protected function getRelatedKeyName()
     {
-        $method = method_exists($this->relation, 'getQualifiedRelatedKeyName')
-            ? 'getQualifiedRelatedKeyName' // Laravel >=5.4
-            : 'getOtherKey';
+        if (method_exists($this->relation, 'getQualifiedRelatedPivotKeyName')) {
+            $method = 'getQualifiedRelatedPivotKeyName'; // Laravel 5.5
+        } elseif (method_exists($this->relation, 'getQualifiedRelatedKeyName')) {
+            $method = 'getQualifiedRelatedKeyName'; // Laravel 5.4
+        } else {
+            $method = 'getOtherKey'; // Laravel 5.3
+        };
 
-        return last(explode('.', $this->relation->getQualifiedRelatedKeyName()));
+        return last(explode('.', $this->relation->$method()));
     }
 
     /**
