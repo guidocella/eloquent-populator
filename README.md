@@ -19,7 +19,7 @@ This is a package to populate Laravel's Eloquent ORM's models by guessing the be
 Require this package with Composer
 
 ```bash
-$ composer require --dev guidocella/eloquent-populator ^2
+$ composer require --dev guidocella/eloquent-populator
 ```
 
 Or manually add it to the development dependencies in your `composer.json` and run `composer update`. You may want to substitute it for Faker, since it will be required by Populator.
