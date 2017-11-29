@@ -68,7 +68,7 @@ Any closure passed will receive the model instance and the previously inserted p
 
 ```php
 $populator->add(Post::class, 5, [
-    'user_id'   => function ($post, $insertedPKs) use ($faker) {
+    'user_id'   => function ($post, $insertedPKs) {
         return array_random($insertedPKs[User::class]);
     },
     'user_type' => function ($post) {
