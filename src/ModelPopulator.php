@@ -2,6 +2,7 @@
 
 namespace EloquentPopulator;
 
+use EloquentPopulator\Models\Phone;
 use Faker\Generator;
 use Illuminate\Database\Eloquent;
 use Illuminate\Database\Eloquent\Collection;

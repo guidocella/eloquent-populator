@@ -106,11 +106,13 @@ class PivotTest extends PopulatorTestCase
     public function testBelongsToAndBelongsToManyOfSameModel_withExecute()
     {
         $this->populator->create(User::class);
+        $this->assertTrue(true);
     }
 
     public function testBelongsToAndBelongsToManyOfSameModel_withSeed()
     {
         $this->populator->add(User::class)->seed();
+        $this->assertTrue(true);
     }
 
     public function testSeedRunsOneInsertPer500PivotRows()

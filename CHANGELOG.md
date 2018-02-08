@@ -1,3 +1,7 @@
+## v2.1.3 (2018-02-08)
+
+- Added Laravel 5.6 support
+
 ## v2.1.2 (2017-08-30)
 
 - Added Laravel 5.5 support
