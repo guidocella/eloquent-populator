@@ -174,7 +174,7 @@ $user->roles->count(); // 0 to 5.
 To attach a specific number of models, call `attachQuantities` after `add` with an array of the quantities indexed by the class names of the related models.
 
 ```php
-$populator->add(User::class)->attachQuantites([Role::class => 5, Club::class => 0]);
+$populator->add(User::class)->attachQuantities([Role::class => 5, Club::class => 0]);
 ```
 
 #### Extra attributes
