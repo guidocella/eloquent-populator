@@ -22,10 +22,10 @@ trait GuessesColumnFormatters
      * Guess the column formatters based on the columns' names or types or on whether they are a foreign key.
      *
      * @param  Model|BelongsToMany $model
-     * @param  bool                $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool                $seeding
      * @return array
      */
-    protected function getGuessedColumnFormatters($model, $makeNullableColumnsOptionalAndKeepTimestamps = false)
+    protected function getGuessedColumnFormatters($model, $seeding = false)
     {
         $columns = $this->getColumns($model);
 
@@ -49,7 +49,7 @@ trait GuessesColumnFormatters
             }
 
             if (
-                !$makeNullableColumnsOptionalAndKeepTimestamps && $model instanceof Model &&
+                !$seeding && $model instanceof Model &&
                 ($columnName === $model->getCreatedAtColumn() || $columnName === $model->getUpdatedAtColumn())
             ) {
                 continue;
@@ -64,7 +64,7 @@ trait GuessesColumnFormatters
                 continue;
             }
 
-            if ($column->getNotnull() || !$makeNullableColumnsOptionalAndKeepTimestamps) {
+            if ($column->getNotnull() || !$seeding) {
                 $formatters[$columnName] = $formatter;
             } else {
                 $formatters[$columnName] = function () use ($formatter) {
@@ -75,7 +75,7 @@ trait GuessesColumnFormatters
 
         // Pivot tables and translations shouldn't have their foreign keys associated here.
         return $model instanceof Model && !$this->isTranslation($model) ?
-            $this->populateForeignKeys($formatters, $columns, $makeNullableColumnsOptionalAndKeepTimestamps)
+            $this->populateForeignKeys($formatters, $columns, $seeding)
             : $formatters;
     }
 

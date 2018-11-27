@@ -104,13 +104,13 @@ class PivotPopulator
     /**
      * Set the guessed column formatters for extra attributes of the pivot table.
      *
-     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool $seeding
      * @return void
      */
-    public function setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    public function setGuessedColumnFormatters($seeding)
     {
         $this->guessedFormatters = $this->unsetForeignKeys(
-            $this->getGuessedColumnFormatters($this->relation, $makeNullableColumnsOptionalAndKeepTimestamps)
+            $this->getGuessedColumnFormatters($this->relation, $seeding)
         );
     }
 

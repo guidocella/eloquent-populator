@@ -284,38 +284,35 @@ class ModelPopulator
     /**
      * Set the guessed column formatters for the model being built.
      *
-     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool $seeding
      * @return void
      */
-    public function setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    public function setGuessedColumnFormatters($seeding)
     {
-        $this->guessedFormatters = $this->getGuessedColumnFormatters(
-            $this->model,
-            $makeNullableColumnsOptionalAndKeepTimestamps
-        );
+        $this->guessedFormatters = $this->getGuessedColumnFormatters($this->model, $seeding);
 
         if ($this->dimsavTranslatable()) {
-            $this->guessDimsavFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+            $this->guessDimsavFormatters($seeding);
         } else {
             $this->guessMultilingualFormatters();
         }
 
-        $this->setGuessedPivotFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+        $this->setGuessedPivotFormatters($seeding);
     }
 
     /**
      * Set the guessed column formatters for the extra columns of the pivot tables
      * of the BelongsToMany relations of the model being built.
      *
-     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool $seeding
      * @return void
      */
-    public function setGuessedPivotFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    public function setGuessedPivotFormatters($seeding)
     {
         foreach ($this->pivotPopulators as $pivotPopulator) {
-            $pivotPopulator->setGuessedColumnFormatters($makeNullableColumnsOptionalAndKeepTimestamps);
+            $pivotPopulator->setGuessedColumnFormatters($seeding);
 
-            if ($makeNullableColumnsOptionalAndKeepTimestamps) {
+            if ($seeding) {
                 $pivotPopulator->attachRandomQuantity();
             }
         }

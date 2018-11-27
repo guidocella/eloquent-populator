@@ -141,20 +141,17 @@ trait PopulatesTranslations
     /**
      * Set the guessed formatters of the translation model.
      *
-     * @param  bool $makeNullableColumnsOptionalAndKeepTimestamps
+     * @param  bool $seeding
      * @return void
      */
-    protected function guessDimsavFormatters($makeNullableColumnsOptionalAndKeepTimestamps)
+    protected function guessDimsavFormatters($seeding)
     {
         // Don't use Translatable::getNewTranslation()
         // because it runs a query every first time it accesses $model->translations.
         $translationModelName = $this->model->getTranslationModelName();
         $translationModel = new $translationModelName;
 
-        $this->guessedTranslationFormatters = $this->getGuessedColumnFormatters(
-            $translationModel,
-            $makeNullableColumnsOptionalAndKeepTimestamps
-        );
+        $this->guessedTranslationFormatters = $this->getGuessedColumnFormatters($translationModel, $seeding);
 
         // We'll unset the foreign key formatter so the attribute won't be set to
         // a random number which would never be overwritten when make() is used.
