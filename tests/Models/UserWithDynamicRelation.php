@@ -10,7 +10,7 @@ class UserWithDynamicRelation extends Model
 
     public $timestamps = false;
 
-    public function login()
+    public function lastLogin()
     {
         return $this->belongsTo(Login::class);
     }
