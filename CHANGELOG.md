@@ -1,6 +1,6 @@
 ## v2.1.5 (2018-11-27)
 
-- Prevented the population of dynamic relationships - inspired by [https://reinink.ca/articles/dynamic-relationships-in-laravel-using-subqueries]  
+- Prevented the population of dynamic relationships - inspired by https://reinink.ca/articles/dynamic-relationships-in-laravel-using-subqueries
 
 ## v2.1.4 (2018-09-04)
 
