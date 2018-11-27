@@ -289,7 +289,7 @@ class ModelPopulator
      */
     public function setGuessedColumnFormatters($seeding)
     {
-        $this->guessedFormatters = $this->getGuessedColumnFormatters($this->model, $seeding);
+        $this->guessedFormatters = $this->getGuessedColumnFormatters($this->model, $seeding, true);
 
         if ($this->dimsavTranslatable()) {
             $this->guessDimsavFormatters($seeding);

@@ -23,9 +23,10 @@ trait GuessesColumnFormatters
      *
      * @param  Model|BelongsToMany $model
      * @param  bool                $seeding
+     * @param  bool                $populateForeignKeys
      * @return array
      */
-    protected function getGuessedColumnFormatters($model, $seeding = false)
+    protected function getGuessedColumnFormatters($model, $seeding, $populateForeignKeys = false)
     {
         $columns = $this->getColumns($model);
 
@@ -73,10 +74,7 @@ trait GuessesColumnFormatters
             }
         }
 
-        // Pivot tables and translations shouldn't have their foreign keys associated here.
-        return $model instanceof Model && !$this->isTranslation($model) ?
-            $this->populateForeignKeys($formatters, $columns, $seeding)
-            : $formatters;
+        return $populateForeignKeys ? $this->populateForeignKeys($formatters, $columns, $seeding) : $formatters;
     }
 
     /**
