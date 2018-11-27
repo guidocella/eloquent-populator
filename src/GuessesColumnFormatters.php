@@ -162,16 +162,16 @@ trait GuessesColumnFormatters
      *
      * @param  array    $formatters
      * @param  Column[] $columns
-     * @param  bool     $makeNullableColumnsOptional
+     * @param  bool     $seeding
      * @return array The formatters.
      */
-    protected function populateForeignKeys(array $formatters, array $columns, $makeNullableColumnsOptional)
+    protected function populateForeignKeys(array $formatters, array $columns, $seeding)
     {
         foreach ($this->relations as $relation) {
             if ($relation instanceof MorphTo) {
-                $this->associateMorphTo($formatters, $relation, $columns, $makeNullableColumnsOptional);
+                $this->associateMorphTo($formatters, $relation, $columns, $seeding);
             } elseif ($relation instanceof BelongsTo) {
-                $this->associateBelongsTo($formatters, $relation, $columns, $makeNullableColumnsOptional);
+                $this->associateBelongsTo($formatters, $relation, $columns, $seeding);
             }
         }
 
@@ -184,19 +184,19 @@ trait GuessesColumnFormatters
      * @param  array     $formatters
      * @param  BelongsTo $relation
      * @param  Column[]  $columns
-     * @param  bool      $makeNullableColumnsOptional
+     * @param  bool      $seeding
      * @return void
      */
     protected function associateBelongsTo(
         array &$formatters,
         BelongsTo $relation,
         array $columns,
-        $makeNullableColumnsOptional
+        $seeding
     ) {
         $relatedClass = get_class($relation->getRelated());
         $foreignKey = $relation->getForeignKey();
 
-        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$makeNullableColumnsOptional;
+        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$seeding;
 
         $formatters[$foreignKey] = function ($model, $insertedPKs) use ($relatedClass, $alwaysAssociate) {
             if (!isset($insertedPKs[$relatedClass])) {
@@ -217,20 +217,20 @@ trait GuessesColumnFormatters
      * @param  array    $formatters
      * @param  MorphTo  $relation
      * @param  Column[] $columns
-     * @param  bool     $makeNullableColumnsOptional
+     * @param  bool     $seeding
      * @return void
      */
     protected function associateMorphTo(
         array &$formatters,
         MorphTo $relation,
         array $columns,
-        $makeNullableColumnsOptional
+        $seeding
     ) {
         // Removes the table names from the foreign key and the morph type.
         $foreignKey = last(explode('.', $relation->getForeignKey()));
         $morphType = last(explode('.', $relation->getMorphType()));
 
-        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$makeNullableColumnsOptional;
+        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$seeding;
 
         $formatters[$foreignKey] = function ($model, $insertedPKs) use ($alwaysAssociate) {
             if (!($morphOwner = $this->pickMorphOwner($insertedPKs, $alwaysAssociate))) {
