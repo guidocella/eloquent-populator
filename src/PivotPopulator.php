@@ -66,6 +66,7 @@ class PivotPopulator
         $this->relation = $relation;
         $this->generator = $generator;
         $this->relatedClass = get_class($relation->getRelated());
+        $this->setColumns($relation);
     }
 
     /**

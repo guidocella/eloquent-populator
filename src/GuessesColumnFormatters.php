@@ -193,6 +193,11 @@ trait GuessesColumnFormatters
         $relatedClass = get_class($relation->getRelated());
         $foreignKey = $relation->getForeignKey();
 
+        // Skips dynamic relationships.
+        if (!isset($this->columns[$foreignKey])) {
+            return;
+        }
+
         $alwaysAssociate = $this->columns[$foreignKey]->getNotnull() || !$seeding;
 
         $formatters[$foreignKey] = function ($model, $insertedPKs) use ($relatedClass, $alwaysAssociate) {

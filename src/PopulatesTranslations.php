@@ -151,6 +151,7 @@ trait PopulatesTranslations
         $translationModelName = $this->model->getTranslationModelName();
         $translationModel = new $translationModelName;
 
+        $this->setColumns($translationModel);
         $this->guessedTranslationFormatters = $this->getGuessedColumnFormatters($translationModel, $seeding);
 
         // We'll unset the foreign key formatter so the attribute won't be set to

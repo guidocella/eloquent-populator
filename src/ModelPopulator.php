@@ -103,6 +103,7 @@ class ModelPopulator
         $this->generator = $generator;
         $this->customAttributes = $customAttributes;
         $this->modifiers = $modifiers;
+        $this->setColumns($model);
         $this->bootstrapRelations();
     }
 
@@ -596,7 +597,10 @@ class ModelPopulator
                     || array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
 
                     // And the relations of the model to itself to prevent infinite recursion.
-                    || $relation->getRelated() instanceof $this->model;
+                    || $relation->getRelated() instanceof $this->model
+
+                    // And dynamic relations in which the foreign key is selected with a subquery.
+                    || !isset($this->columns[$relation->getRelated()->getForeignKey()]);
             })
             ->map(function ($relation) {
                 return get_class($relation->getRelated());

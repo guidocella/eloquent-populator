@@ -4,8 +4,10 @@ namespace EloquentPopulator;
 
 use EloquentPopulator\Models\Club;
 use EloquentPopulator\Models\Company;
+use EloquentPopulator\Models\Login;
 use EloquentPopulator\Models\Post;
 use EloquentPopulator\Models\User;
+use EloquentPopulator\Models\UserWithDynamicRelation;
 use EloquentPopulator\Models\Video;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -200,6 +202,12 @@ class PopulatorTest extends PopulatorTestCase
 
         $this->assertArrayNotHasKey('"index"', $club);
         $this->assertArrayHasKey('index', $club);
+    }
+
+    public function testDynamicRelationsAreIgnored()
+    {
+        $this->populator->create(UserWithDynamicRelation::class);
+        $this->assertDatabaseMissing('logins', []);
     }
 
     public function testSeedRunsOneInsertPer500Rows()
