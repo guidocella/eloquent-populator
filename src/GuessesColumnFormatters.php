@@ -12,11 +12,94 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 trait GuessesColumnFormatters
 {
     /**
+     * The model's or pivot table's columns.
+     *
+     * @var Column[]
+     */
+    protected $columns = [];
+
+    /**
      * The model's or pivot table's columns' guessed formatters.
      *
      * @var (\Closure|null)[]
      */
     protected $guessedFormatters = [];
+
+    /**
+     * Get the columns of a model's table.
+     *
+     * @param  Model|BelongsToMany $model
+     * @return Column[]
+     */
+    protected function setColumns($model)
+    {
+        $schema = $model->getConnection()->getDoctrineSchemaManager();
+        $platform = $schema->getDatabasePlatform();
+
+        // Prevents a DBALException if the table contains an enum.
+        $platform->registerDoctrineTypeMapping('enum', 'string');
+
+        list($table, $database) = $this->getTableAndDatabase($model);
+
+        $this->columns = $model->getConnection()->getDoctrineConnection()->fetchAll(
+            $platform->getListTableColumnsSQL($table, $database)
+        );
+
+        $this->rejectVirtualColumns();
+
+        $columns = $this->columns;
+        $this->columns = call_user_func(\Closure::bind(function () use ($table, $database, $columns) {
+            return $this->_getPortableTableColumnList($table, $database, $columns);
+        }, $schema, $schema));
+
+        return $this->unquoteColumnNames($platform->getIdentifierQuoteCharacter());
+    }
+
+    /**
+     * Get the table and database names of a model.
+     *
+     * @param  Model $model
+     * @return array
+     */
+    protected function getTableAndDatabase($model)
+    {
+        $table = $model->getConnection()->getTablePrefix() . $model->getTable();
+
+        $database = null;
+
+        if (strpos($table, '.')) {
+            list($database, $table) = explode('.', $table);
+        }
+
+        return [$table, $database];
+    }
+
+    /**
+     * If the database driver is MySql/MariaDB, filter out any virtual column.
+     *
+     * @return void
+     */
+    protected function rejectVirtualColumns()
+    {
+        $this->columns = array_filter($this->columns, function ($column) {
+            return !isset($column['Extra']) || !str_contains($column['Extra'], 'VIRTUAL');
+        });
+    }
+
+    /**
+     * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
+     *
+     * @param  string $quoteCharacter
+     * @return array void
+     */
+    protected function unquoteColumnNames($quoteCharacter)
+    {
+        foreach ($this->columns as $columnName => $columnData) {
+            if (starts_with($columnName, $quoteCharacter)) {
+                $this->columns[substr($columnName, 1, -1)] = array_pull($this->columns, $columnName);
+            }
+        }
+    }
 
     /**
      * Guess the column formatters based on the columns' names or types or on whether they are a foreign key.
@@ -28,14 +111,14 @@ trait GuessesColumnFormatters
      */
     protected function getGuessedColumnFormatters($model, $seeding, $populateForeignKeys = false)
     {
-        $columns = $this->getColumns($model);
+        $this->setColumns($model);
 
         $formatters = [];
 
         $nameGuesser = new Name($this->generator);
         $columnTypeGuesser = new ColumnTypeGuesser($this->generator);
 
-        foreach ($columns as $columnName => $column) {
+        foreach ($this->columns as $columnName => $column) {
             // Skips autoincremented primary keys.
             if ($model instanceof Model && $columnName === $model->getKeyName() && $column->getAutoincrement()) {
                 continue;
@@ -74,86 +157,7 @@ trait GuessesColumnFormatters
             }
         }
 
-        return $populateForeignKeys ? $this->populateForeignKeys($formatters, $columns, $seeding) : $formatters;
-    }
-
-    /**
-     * Get the columns of a model's table.
-     *
-     * @param  Model|BelongsToMany $model
-     * @return Column[]
-     */
-    protected function getColumns($model)
-    {
-        $schema = $model->getConnection()->getDoctrineSchemaManager();
-        $platform = $schema->getDatabasePlatform();
-
-        // Prevents a DBALException if the table contains an enum.
-        $platform->registerDoctrineTypeMapping('enum', 'string');
-
-        list($table, $database) = $this->getTableAndDatabase($model);
-
-        $columns = $model->getConnection()->getDoctrineConnection()->fetchAll(
-            $platform->getListTableColumnsSQL($table, $database)
-        );
-
-        $columns = $this->rejectVirtualColumns($columns);
-
-        $columns = call_user_func(\Closure::bind(function () use ($table, $database, $columns) {
-            return $this->_getPortableTableColumnList($table, $database, $columns);
-        }, $schema, $schema));
-
-        return $this->unquoteColumnNames($columns, $platform->getIdentifierQuoteCharacter());
-    }
-
-    /**
-     * Get the table and database names of a model.
-     *
-     * @param  Model $model
-     * @return array
-     */
-    protected function getTableAndDatabase($model)
-    {
-        $table = $model->getConnection()->getTablePrefix() . $model->getTable();
-
-        $database = null;
-
-        if (strpos($table, '.')) {
-            list($database, $table) = explode('.', $table);
-        }
-
-        return [$table, $database];
-    }
-
-    /**
-     * If the database driver is MySql/MariaDB, filter out any virtual column.
-     *
-     * @param  array $columns
-     * @return array The columns.
-     */
-    protected function rejectVirtualColumns(array $columns)
-    {
-        return array_filter($columns, function ($column) {
-            return !isset($column['Extra']) || !str_contains($column['Extra'], 'VIRTUAL');
-        });
-    }
-
-    /**
-     * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
-     *
-     * @param  array  $columns
-     * @param  string $quoteCharacter
-     * @return array The columns.
-     */
-    protected function unquoteColumnNames(array $columns, $quoteCharacter)
-    {
-        foreach ($columns as $columnName => $columnData) {
-            if (starts_with($columnName, $quoteCharacter)) {
-                $columns[substr($columnName, 1, -1)] = array_pull($columns, $columnName);
-            }
-        }
-
-        return $columns;
+        return $populateForeignKeys ? $this->populateForeignKeys($formatters, $seeding) : $formatters;
     }
 
     /**
@@ -161,17 +165,16 @@ trait GuessesColumnFormatters
      * using the previously added related models.
      *
      * @param  array    $formatters
-     * @param  Column[] $columns
      * @param  bool     $seeding
      * @return array The formatters.
      */
-    protected function populateForeignKeys(array $formatters, array $columns, $seeding)
+    protected function populateForeignKeys(array $formatters, $seeding)
     {
         foreach ($this->relations as $relation) {
             if ($relation instanceof MorphTo) {
-                $this->associateMorphTo($formatters, $relation, $columns, $seeding);
+                $this->associateMorphTo($formatters, $relation, $seeding);
             } elseif ($relation instanceof BelongsTo) {
-                $this->associateBelongsTo($formatters, $relation, $columns, $seeding);
+                $this->associateBelongsTo($formatters, $relation, $seeding);
             }
         }
 
@@ -183,20 +186,14 @@ trait GuessesColumnFormatters
      *
      * @param  array     $formatters
      * @param  BelongsTo $relation
-     * @param  Column[]  $columns
      * @param  bool      $seeding
      * @return void
      */
-    protected function associateBelongsTo(
-        array &$formatters,
-        BelongsTo $relation,
-        array $columns,
-        $seeding
-    ) {
+    protected function associateBelongsTo(array &$formatters, BelongsTo $relation, $seeding) {
         $relatedClass = get_class($relation->getRelated());
         $foreignKey = $relation->getForeignKey();
 
-        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$seeding;
+        $alwaysAssociate = $this->columns[$foreignKey]->getNotnull() || !$seeding;
 
         $formatters[$foreignKey] = function ($model, $insertedPKs) use ($relatedClass, $alwaysAssociate) {
             if (!isset($insertedPKs[$relatedClass])) {
@@ -216,21 +213,15 @@ trait GuessesColumnFormatters
      *
      * @param  array    $formatters
      * @param  MorphTo  $relation
-     * @param  Column[] $columns
      * @param  bool     $seeding
      * @return void
      */
-    protected function associateMorphTo(
-        array &$formatters,
-        MorphTo $relation,
-        array $columns,
-        $seeding
-    ) {
+    protected function associateMorphTo(array &$formatters, MorphTo $relation, $seeding) {
         // Removes the table names from the foreign key and the morph type.
         $foreignKey = last(explode('.', $relation->getForeignKey()));
         $morphType = last(explode('.', $relation->getMorphType()));
 
-        $alwaysAssociate = $columns[$foreignKey]->getNotnull() || !$seeding;
+        $alwaysAssociate = $this->columns[$foreignKey]->getNotnull() || !$seeding;
 
         $formatters[$foreignKey] = function ($model, $insertedPKs) use ($alwaysAssociate) {
             if (!($morphOwner = $this->pickMorphOwner($insertedPKs, $alwaysAssociate))) {
