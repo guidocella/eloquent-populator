@@ -6,6 +6,7 @@ use Faker\Generator;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 class Populator
 {
@@ -409,7 +410,7 @@ class Populator
             $recordsOfCurrentRelation = array_column($pivotRecords, $relatedClass);
 
             // We'll flatten the records since they're grouped by parent model.
-            $recordsOfCurrentRelation = array_flatten($recordsOfCurrentRelation, 1);
+            $recordsOfCurrentRelation = Arr::flatten($recordsOfCurrentRelation, 1);
 
             foreach (array_chunk($recordsOfCurrentRelation, 500) as $chunk) {
                 $connection->table($pivotTables[$relatedClass])->insert($chunk);
@@ -447,7 +448,7 @@ class Populator
         unset($translationsOfOneModel, $translation);
 
         // We'll flatten the records since they're grouped by model.
-        $translations = array_flatten($translations, 1);
+        $translations = Arr::flatten($translations, 1);
 
         foreach (array_chunk($translations, 500) as $chunk) {
             call_user_func([$mainModel->getTranslationModelName(), 'insert'], $chunk);

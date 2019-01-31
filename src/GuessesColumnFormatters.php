@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 trait GuessesColumnFormatters
 {
@@ -82,7 +84,7 @@ trait GuessesColumnFormatters
     protected function rejectVirtualColumns()
     {
         $this->columns = array_filter($this->columns, function ($column) {
-            return !isset($column['Extra']) || !str_contains($column['Extra'], 'VIRTUAL');
+            return !isset($column['Extra']) || !Str::contains($column['Extra'], 'VIRTUAL');
         });
     }
 
@@ -95,8 +97,8 @@ trait GuessesColumnFormatters
     protected function unquoteColumnNames($quoteCharacter)
     {
         foreach ($this->columns as $columnName => $columnData) {
-            if (starts_with($columnName, $quoteCharacter)) {
-                $this->columns[substr($columnName, 1, -1)] = array_pull($this->columns, $columnName);
+            if (Str::startsWith($columnName, $quoteCharacter)) {
+                $this->columns[substr($columnName, 1, -1)] = Arr::pull($this->columns, $columnName);
             }
         }
     }
