@@ -79,7 +79,7 @@ class PopulatorTest extends PopulatorTestCase
     {
         $user = $this->populator->raw(User::class);
 
-        $this->assertInternalType('array', $user);
+        $this->assertIsArray($user);
 
         $this->assertFalse(User::exists());
     }
@@ -88,7 +88,7 @@ class PopulatorTest extends PopulatorTestCase
     {
         $users = $this->populator->raw(User::class, 5);
 
-        $this->assertInternalType('array', $users);
+        $this->assertIsArray($users);
 
         $this->assertContainsOnly('array', $users);
 
@@ -111,18 +111,18 @@ class PopulatorTest extends PopulatorTestCase
     {
         $user = $this->populator->make(User::class);
 
-        $this->assertInternalType('int', $user->smallint);
-        $this->assertInternalType('int', $user->integer);
-        $this->assertInternalType('int', $user->bigint);
-        $this->assertInternalType('float', $user->decimal);
-        $this->assertInternalType('float', $user->float);
+        $this->assertIsInt($user->smallint);
+        $this->assertIsInt($user->integer);
+        $this->assertIsInt($user->bigint);
+        $this->assertIsFloat($user->decimal);
+        $this->assertIsFloat($user->float);
         $this->assertTrue(is_string($user->string) && strlen($user->string));
         $this->assertTrue(is_string($user->text) && strlen($user->text));
         $this->assertInstanceOf(\DateTime::class, $user->date);
         $this->assertInstanceOf(\DateTime::class, $user->datetime);
         $this->assertInstanceOf(\DateTime::class, $user->timestamp);
         $this->assertRegExp('/\d\d:\d\d:\d\d/', $user->time);
-        $this->assertInternalType('bool', $user->boolean);
+        $this->assertIsBool($user->boolean);
 
         // DATETIME-TZ, JSON and UUID are not supported by SQLite, so there's no point in testing them.
     }
