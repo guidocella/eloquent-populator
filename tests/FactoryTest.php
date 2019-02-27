@@ -85,11 +85,9 @@ class FactoryTest extends PopulatorTestCase
         $this->assertSame('state@gmail.com', $user->email);
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testExceptionIsThrownifNonExistentStateIsApplied()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $this->populator->make(Product::class, 'foo');
     }
 }
