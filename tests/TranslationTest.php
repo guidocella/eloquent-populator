@@ -9,7 +9,7 @@ use EloquentPopulator\Models\User;
 
 class TranslationTest extends PopulatorTestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

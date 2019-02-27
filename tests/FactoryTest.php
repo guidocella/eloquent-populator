@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent;
 
 class FactoryTest extends PopulatorTestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
