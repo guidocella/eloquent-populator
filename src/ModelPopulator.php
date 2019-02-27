@@ -593,8 +593,8 @@ class ModelPopulator
         return collect($this->belongsToRelations())
             ->reject(function ($relation) {
                 // Rejects the relations whose foreign keys have been passed as custom attributes.
-                return array_key_exists($relation->getForeignKey(), $this->customAttributes)
-                    || array_key_exists($relation->getForeignKey(), $this->getFactoryAttributes($this->model))
+                return array_key_exists($relation->{$this->getBelongsToForeignKeyNameMethod()}(), $this->customAttributes)
+                    || array_key_exists($relation->{$this->getBelongsToForeignKeyNameMethod()}(), $this->getFactoryAttributes($this->model))
 
                     // And the relations of the model to itself to prevent infinite recursion.
                     || $relation->getRelated() instanceof $this->model

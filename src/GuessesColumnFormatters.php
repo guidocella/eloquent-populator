@@ -193,7 +193,7 @@ trait GuessesColumnFormatters
      */
     protected function associateBelongsTo(array &$formatters, BelongsTo $relation, $seeding) {
         $relatedClass = get_class($relation->getRelated());
-        $foreignKey = $relation->getForeignKey();
+        $foreignKey = $relation->{$this->getBelongsToForeignKeyNameMethod()}();
 
         // Skips dynamic relationships.
         if (!isset($this->columns[$foreignKey])) {
@@ -225,7 +225,7 @@ trait GuessesColumnFormatters
      */
     protected function associateMorphTo(array &$formatters, MorphTo $relation, $seeding) {
         // Removes the table names from the foreign key and the morph type.
-        $foreignKey = last(explode('.', $relation->getForeignKey()));
+        $foreignKey = last(explode('.', $relation->{$this->getBelongsToForeignKeyNameMethod()}()));
         $morphType = last(explode('.', $relation->getMorphType()));
 
         $alwaysAssociate = $this->columns[$foreignKey]->getNotnull() || !$seeding;
@@ -280,5 +280,16 @@ trait GuessesColumnFormatters
             // so it will be picked again randomly when the next model is created.
             $this->morphOwner = false;
         });
+    }
+
+    /**
+     * Get the name of the BelongsTo method to get the foreign key name,
+     * which changed in Laravel 5.8.
+     *
+     * @return string
+     */
+    protected function getBelongsToForeignKeyNameMethod()
+    {
+        return method_exists(BelongsTo::class, 'getForeignKeyName') ? 'getForeignKeyName' : 'getForeignKey';
     }
 }
