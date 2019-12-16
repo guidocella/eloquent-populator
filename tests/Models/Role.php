@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Role extends Model
 {
-    use Translatable;
+    // use Translatable;
 
     public $translatedAttributes = ['name'];
 

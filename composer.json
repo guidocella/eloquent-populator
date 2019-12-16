@@ -12,9 +12,7 @@
     },
     "require-dev": {
         "laravel/laravel": "^6",
-        "dimsav/laravel-translatable": "^6",
-        "phpunit/phpunit": "^8",
-        "themsaid/laravel-multilingual": "^1"
+        "phpunit/phpunit": "^8"
     },
     "autoload": {
         "psr-4": {
