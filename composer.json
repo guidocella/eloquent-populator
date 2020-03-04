@@ -6,12 +6,12 @@
     "license": "MIT",
     "require": {
         "php": ">=5.6.4",
-        "illuminate/database": "^5.3||^6",
+        "illuminate/database": "^5.3||^6||^7",
         "fzaninotto/faker": "^1.4",
         "doctrine/dbal": "^2.5"
     },
     "require-dev": {
-        "laravel/laravel": "^6",
+        "laravel/laravel": "^7",
         "phpunit/phpunit": "^8"
     },
     "autoload": {
