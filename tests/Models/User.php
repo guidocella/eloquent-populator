@@ -1,30 +1,20 @@
 <?php
 
-namespace EloquentPopulator\Models;
+namespace GuidoCella\EloquentPopulator\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+// use GuidoCella\Multilingual\Translatable;
+
 class User extends Model
 {
-    public $timestamps = false;
-
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class)->withPivot('expires_at');
-    }
-
-    public function clubs()
-    {
-        return $this->belongsToMany(Club::class);
-    }
-
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function companies()
+    public function friend()
     {
-        return $this->belongsToMany(Company::class);
+        return $this->belongsTo(User::class);
     }
 }

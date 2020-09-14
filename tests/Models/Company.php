@@ -1,18 +1,18 @@
 <?php
 
-namespace EloquentPopulator\Models;
+namespace GuidoCella\EloquentPopulator\Models;
 
+use GuidoCella\Multilingual\Translatable;
 use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
-    public function country()
-    {
-        return $this->belongsTo(Country::class, 'country_code');
-    }
+    use Translatable;
+
+    public $translatable = ['name'];
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasMany(User::class);
     }
 }

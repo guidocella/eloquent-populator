@@ -1,58 +1,31 @@
 <?php
 
-namespace EloquentPopulator;
+namespace GuidoCella\EloquentPopulator;
 
-use Carbon\Carbon;
+use Closure;
 use Doctrine\DBAL\Schema\Column;
 use Faker\Generator;
 
 class ColumnTypeGuesser
 {
-    /**
-     * Faker's generator.
-     *
-     * @var Generator
-     */
-    protected $generator;
+    protected Generator $generator;
 
-    /**
-     * ColumnTypeGuesser constructor.
-     *
-     * @param Generator $generator
-     */
     public function __construct(Generator $generator)
     {
         $this->generator = $generator;
     }
 
-    /**
-     * Guess a column's formatter based on its type.
-     *
-     * @param  Column $column
-     * @param  string $tableName
-     * @return \Closure|null
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function guessFormat(Column $column, $tableName)
+    public function guessFormat(Column $column, string $tableName): ?Closure
     {
         switch ($column->getType()->getName()) {
             case 'smallint':
-                return function () {
-                    return mt_rand(0, 65535);
-                };
+                return fn () => rand(0, 65535);
             case 'integer':
-                return function () {
-                    return mt_rand(0, intval('2147483647'));
-                };
+                return fn () => rand(0, 2147483647);
             case 'bigint':
-                return function () {
-                    return mt_rand(0, intval('18446744073709551615'));
-                };
+                return fn () => rand(0, intval('18446744073709551615'));
             case 'float':
-                return function () {
-                    return mt_rand(0, intval('4294967295')) / mt_rand(1, intval('4294967295'));
-                };
+                return fn () => rand(0, 4294967295) / rand(1, 4294967295);
             case 'decimal':
                 $maxDigits = $column->getPrecision();
                 $maxDecimalDigits = $column->getScale();
@@ -88,8 +61,8 @@ class ColumnTypeGuesser
 
                     throw new \InvalidArgumentException(
                         "$columnName is a string shorter than 5 characters,"
-                        . " but Faker's text() can only generate text of at least 5 characters." . PHP_EOL
-                        . "Please specify a more accurate formatter for $columnName."
+                        ." but Faker's text() can only generate text of at least 5 characters.".PHP_EOL
+                        ."Please specify a more accurate formatter for $columnName."
                     );
 
                     // Of course we could just use str_random($size) here,
@@ -98,35 +71,22 @@ class ColumnTypeGuesser
                     // e.g. $faker->countryCode for sender_country.
                 };
             case 'text':
-                return function () {
-                    return $this->generator->text;
-                };
+                return fn () => $this->generator->text;
             case 'guid':
-                return function () {
-                    return $this->generator->uuid;
-                };
+                return fn () => $this->generator->uuid;
             case 'date':
             case 'datetime':
             case 'datetimetz':
-                return function () {
-                    return $this->generator->datetime;
-                };
+                return fn () => $this->generator->datetime;
             case 'time':
-                return function () {
-                    return $this->generator->time;
-                };
+                return fn () => $this->generator->time;
             case 'boolean':
-                return function () {
-                    return $this->generator->boolean;
-                };
-                // Sadly Doctrine maps all TINYINT to BooleanType.
+                return fn () => $this->generator->boolean;
+                // Unfortunately Doctrine maps all TINYINT to BooleanType.
             case 'json':
             case 'json_array':
-                return function () {
-                    return json_encode([$this->generator->word => $this->generator->word]);
-                };
+                return fn () => json_encode([$this->generator->word => $this->generator->word]);
             default:
-                // No smart way to guess what the user expects here.
                 return null;
         }
     }

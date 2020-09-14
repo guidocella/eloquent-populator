@@ -1,3 +1,8 @@
+## v3.0 (2020-09-14)
+
+- Populator has been rewritten to integrate with the improved Laravel 8 model factories instead of wrapping them.
+- Removed the integration with Translatable.
+
 ## v2.1.5 (2018-11-27)
 
 - Prevented the population of dynamic relationships - inspired by https://reinink.ca/articles/dynamic-relationships-in-laravel-using-subqueries

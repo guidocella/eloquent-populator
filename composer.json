@@ -1,30 +1,28 @@
 {
     "name": "guidocella/eloquent-populator",
     "type": "library",
-    "description": "Automatically populate Eloquent models",
+    "description": "Guess attributes for Eloquent model factories",
     "keywords": ["laravel", "eloquent", "database", "faker"],
     "license": "MIT",
     "require": {
-        "php": ">=5.6.4",
-        "illuminate/database": "^5.3||^6||^7",
+        "php": ">=7.4",
+        "illuminate/database": "^8",
         "fzaninotto/faker": "^1.4",
         "doctrine/dbal": "^2.5"
     },
     "require-dev": {
-        "laravel/laravel": "^7",
-        "phpunit/phpunit": "^8"
+        "guidocella/laravel-multilingual": "*",
+        "laravel/laravel": "^8",
+        "phpunit/phpunit": "^9"
     },
     "autoload": {
         "psr-4": {
-            "EloquentPopulator\\": "src"
-        },
-        "files": [
-            "src/helper.php"
-        ]
+            "GuidoCella\\EloquentPopulator\\": "src"
+        }
     },
     "autoload-dev": {
         "psr-4": {
-            "EloquentPopulator\\": "tests"
+            "GuidoCella\\EloquentPopulator\\": "tests"
         }
     }
 }

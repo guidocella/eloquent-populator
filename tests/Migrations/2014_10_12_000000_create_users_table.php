@@ -8,8 +8,6 @@ class CreateUsersTable extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up()
     {
@@ -31,7 +29,7 @@ class CreateUsersTable extends Migration
             $table->boolean('boolean');
 
             $table->unsignedInteger('company_id')->nullable();
-            $table->foreign('company_id')->references('id')->on('companies');
+            $table->unsignedInteger('friend_id')->nullable();
         });
     }
 }
