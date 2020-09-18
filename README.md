@@ -33,7 +33,7 @@ public function definition()
 }
 ```
 
-If you execute `php artisan stub:publish`, you can modify `factory.stub` to include the call to Populator so that `php artisan make:factory` will add it.
+If you execute `php artisan stub:publish`, you can include the call to Populator in `factory.stub` so that `php artisan make:factory` will add it.
 
 After guessing a model's formatters once, they are cached in a static property even across different tests.
 
