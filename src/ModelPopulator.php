@@ -108,9 +108,12 @@ class ModelPopulator
             }
 
             $formatter = $nameGuesser->guessFormat(
-                $columnName === 'country_code' ? 'country' : $columnName,
+                $columnName,
                 $column->getLength()
-            ) ?? $columnTypeGuesser->guessFormat($column, $this->model->getTable());
+            ) ?? $columnTypeGuesser->guessFormat(
+                $column,
+                $this->model->getTable()
+            );
 
             if (!$formatter) {
                 continue;
