@@ -7,7 +7,7 @@
     "require": {
         "php": ">=7.4",
         "illuminate/database": "^8",
-        "fzaninotto/faker": "^1.4",
+        "fakerphp/faker": "^1",
         "doctrine/dbal": "^2.5"
     },
     "require-dev": {
