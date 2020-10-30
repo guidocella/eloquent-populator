@@ -198,7 +198,7 @@ class ModelPopulator
         }
 
         // Skip foreign keys for relations of the model to itself to prevent infinite recursion.
-        if ($relatedClass instanceof $this->model) {
+        if ($this->model instanceof $relatedClass) {
             $formatters[$foreignKey] = null;
 
             return;
