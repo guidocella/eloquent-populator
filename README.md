@@ -1,6 +1,6 @@
 # Eloquent Populator
 
-This package provides default attributes for Laravel model factories by guessing the best [Faker](https://github.com/fzaninotto/Faker) formatters from columns' names and types.
+This package provides default attributes for Laravel model factories by guessing the best [Faker](https://github.com/fakerphp/Faker) formatters from columns' names and types.
 For example, if a column is called `first_name`, it will use `$faker->firstName`. If unable to guess by the column's name, it will guess the formatter by the column's type; for example, it will use `$faker->text` for a `VARCHAR` column, or a Carbon instance for a `TIMESTAMP`. Models of `BelongsTo` relationships that have been defined are created as well.
 Furthermore, if you use the [Multilingual](https://github.com/guidocella/laravel-multilingual) package, for translatable attributes Populator will generate arrays with a different value for each configured locale.
 
