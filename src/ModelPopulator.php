@@ -40,7 +40,7 @@ class ModelPopulator
 
         [$table, $database] = $this->getTableAndDatabase();
 
-        $this->columns = $this->model->getConnection()->getDoctrineConnection()->fetchAll(
+        $this->columns = $this->model->getConnection()->getDoctrineConnection()->fetchAllAssociative(
             $platform->getListTableColumnsSQL($table, $database)
         );
 
