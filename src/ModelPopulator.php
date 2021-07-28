@@ -101,8 +101,8 @@ class ModelPopulator
             }
 
             if (
-                !Populator::$seeding &&
-                in_array($columnName, [$this->model->getCreatedAtColumn(), $this->model->getUpdatedAtColumn()])
+                !Populator::$seeding
+                && in_array($columnName, [$this->model->getCreatedAtColumn(), $this->model->getUpdatedAtColumn()])
             ) {
                 continue;
             }
@@ -144,7 +144,7 @@ class ModelPopulator
         foreach ($this->model->translatable as $translatableAttributeKey) {
             $formatters[$translatableAttributeKey] = function () {
                 return collect(config('multilingual.locales'))
-                    ->mapWithKeys(fn ($locale) => [$locale => $this->generator->sentence])
+                    ->mapWithKeys(fn ($locale) => [$locale => $this->generator->sentence()])
                     ->all()
                 ;
             };

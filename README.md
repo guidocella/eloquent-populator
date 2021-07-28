@@ -1,7 +1,7 @@
 # Eloquent Populator
 
 This package provides default attributes for Laravel model factories by guessing the best [Faker](https://github.com/fakerphp/Faker) formatters from columns' names and types.
-For example, if a column is called `first_name`, it will use `$faker->firstName`. If unable to guess by the column's name, it will guess the formatter by the column's type; for example, it will use `$faker->text` for a `VARCHAR` column, or a Carbon instance for a `TIMESTAMP`. Models of `BelongsTo` relationships that have been defined are created as well.
+For example, if a column is called `first_name`, it will use `$faker->firstName()`. If unable to guess by the column's name, it will guess the formatter by the column's type; for example, it will use `$faker->text()` for a `VARCHAR` column, or a Carbon instance for a `TIMESTAMP`. Models of `BelongsTo` relationships that have been defined are created as well.
 Furthermore, if you use the [Multilingual](https://github.com/guidocella/laravel-multilingual) package, for translatable attributes Populator will generate arrays with a different value for each configured locale.
 
 Compared to packages that generate factories once, you generally don't have to update your factories as you change their table definitions and they will be very small.
@@ -28,7 +28,7 @@ use GuidoCella\EloquentPopulator\Populator;
 public function definition()
 {
     return array_merge(Populator::guessFormatters($this->model), [
-            'avatar' => $this->faker->imageUrl
+            'avatar' => $this->faker->imageUrl()
     ]);
 }
 ```

@@ -20,12 +20,16 @@ class ColumnTypeGuesser
         switch ($column->getType()->getName()) {
             case 'smallint':
                 return fn () => rand(0, 65535);
+
             case 'integer':
                 return fn () => rand(0, 2147483647);
+
             case 'bigint':
                 return fn () => rand(0, intval('18446744073709551615'));
+
             case 'float':
                 return fn () => rand(0, 4294967295) / rand(1, 4294967295);
+
             case 'decimal':
                 $maxDigits = $column->getPrecision();
                 $maxDecimalDigits = $column->getScale();
@@ -42,6 +46,7 @@ class ColumnTypeGuesser
 
                     return $value;
                 };
+
             case 'string':
                 $size = $column->getLength() ?: 60;
 
@@ -70,22 +75,28 @@ class ColumnTypeGuesser
                     // I found that it was better to specify a more precise formatter anyway,
                     // e.g. $faker->countryCode for sender_country.
                 };
+
             case 'text':
-                return fn () => $this->generator->text;
+                return fn () => $this->generator->text();
+
             case 'guid':
-                return fn () => $this->generator->uuid;
+                return fn () => $this->generator->uuid();
+
             case 'date':
             case 'datetime':
             case 'datetimetz':
-                return fn () => $this->generator->datetime;
+                return fn () => $this->generator->datetime();
+
             case 'time':
-                return fn () => $this->generator->time;
+                return fn () => $this->generator->time();
+
             case 'boolean':
-                return fn () => $this->generator->boolean;
+                return fn () => $this->generator->boolean();
                 // Unfortunately Doctrine maps all TINYINT to BooleanType.
             case 'json':
             case 'json_array':
-                return fn () => json_encode([$this->generator->word => $this->generator->word]);
+                return fn () => json_encode([$this->generator->word() => $this->generator->word()]);
+
             default:
                 return null;
         }
