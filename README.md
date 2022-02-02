@@ -27,9 +27,9 @@ use GuidoCella\EloquentPopulator\Populator;
 
 public function definition()
 {
-    return array_merge(Populator::guessFormatters($this->model), [
-            'avatar' => $this->faker->imageUrl()
-    ]);
+    return [...Populator::guessFormatters($this->model), ...[
+        'avatar' => $this->faker->imageUrl()
+    ]];
 }
 ```
 
