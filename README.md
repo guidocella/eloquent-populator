@@ -6,8 +6,6 @@ Furthermore, if you use the [Multilingual](https://github.com/guidocella/laravel
 
 Compared to packages that generate factories once, you generally don't have to update your factories as you change their table definitions and they will be very small.
 
-Due to the improvements in Laravel 8's model factories, in version 3 Populator has been rewritten to integrate with them instead of wrapping them. As a result, the convenient syntax to seed the database with bulk inserts while connecting all relationships has been lost, but you no longer have to deviate from Laravel's API and the complexity of the package has been drastically reduced.
-
 ## Installation
 
 Install the package with Composer:
