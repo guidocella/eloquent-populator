@@ -25,7 +25,7 @@ use GuidoCella\EloquentPopulator\Populator;
 
 public function definition()
 {
-    return [...Populator::guessFormatters($this->model), ...[
+    return [...Populator::guessFormatters($this->modelName()), ...[
         'avatar' => $this->faker->imageUrl()
     ]];
 }
