@@ -193,6 +193,7 @@ class ModelPopulator
 
         // Ignore dynamic relations in which the foreign key is selected with a subquery.
         // https://reinink.ca/articles/dynamic-relationships-in-laravel-using-subqueries
+        // (superseded by Has One Of Many relationships)
         if (!isset($this->columns[$foreignKey])) {
             return;
         }
