@@ -16,7 +16,7 @@ composer require --dev guidocella/eloquent-populator
 
 ## Model factory integration
 
-Call `Populator::guessFormatters($this->model)` in your factories' `definition` methods to get an array with the guessed formatters. You may merge these with custom attributes whose guessed formatter isn't accurate.
+Call `Populator::guessFormatters($this->modelName())` in your factories' `definition` methods to get an array with the guessed formatters. You may merge these with custom attributes whose guessed formatter isn't accurate.
 
 ```php
 use GuidoCella\EloquentPopulator\Populator;
