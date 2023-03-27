@@ -23,7 +23,7 @@ use GuidoCella\EloquentPopulator\Populator;
 
 ...
 
-public function definition()
+public function definition(): array
 {
     return [...Populator::guessFormatters($this->modelName()), ...[
         'avatar' => $this->faker->imageUrl()
