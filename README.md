@@ -45,7 +45,7 @@ public function run()
     Populator::setSeeding();
 ```
 
-Its effect is that nullable columns will have a 50% chance of being set to null or to the guessed formatter.
+Its effect is that nullable columns will have a 50% chance of being set to `null` or to the guessed formatter.
 
 ## Testing
 
@@ -64,4 +64,4 @@ public function testSubmitWithCorrectName() {
 }
 ```
 
-On the other hand, seeding the database with null attributes lets you notice `Trying to get property of non-object` errors.
+On the other hand, seeding the database with `null` attributes lets you notice `Trying to get property of non-object` errors.
