@@ -3,8 +3,9 @@
 namespace GuidoCella\EloquentPopulator;
 
 use Closure;
-use Doctrine\DBAL\Schema\Column;
 use Faker\Generator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class ColumnTypeGuesser
 {
@@ -15,24 +16,32 @@ class ColumnTypeGuesser
         $this->generator = $generator;
     }
 
-    public function guessFormat(Column $column, string $tableName): ?Closure
+    public function guessFormat(array $column): ?Closure
     {
-        switch ($column->getType()->getName()) {
+        switch ($column['type_name']) {
             case 'smallint':
-                return fn () => rand(0, 65535);
+                return fn () => rand(0, 32767);
 
+            case 'int':
             case 'integer':
                 return fn () => rand(0, 2147483647);
 
             case 'bigint':
-                return fn () => rand(0, intval('18446744073709551615'));
+                return fn () => rand(0, 9223372036854775807);
 
             case 'float':
-                return fn () => rand(0, 4294967295) / rand(1, 4294967295);
+            case 'double':
+                return fn () => $this->generator->randomFloat();
 
             case 'decimal':
-                $maxDigits = $column->getPrecision();
-                $maxDecimalDigits = $column->getScale();
+            case 'numeric':
+                // The precision is unavailable with SQLite.
+                if ($column['type_name'] === 'numeric') {
+                    $maxDigits = 3;
+                    $maxDecimalDigits = 1;
+                } else {
+                    [$maxDigits, $maxDecimalDigits] = explode(',', Str::before(Str::after($column['type'], '('), ')'));
+                }
 
                 $max = 10 ** ($maxDigits - $maxDecimalDigits);
 
@@ -47,8 +56,12 @@ class ColumnTypeGuesser
                     return $value;
                 };
 
-            case 'string':
-                $size = $column->getLength() ?: 60;
+            case 'varchar':
+            case 'char':
+                $size = Str::before(Str::after($column['type'], '('), ')');
+                if ($size === 'varchar') { // SQLite
+                    $size = 5;
+                }
 
                 // If Faker's text() $maxNbChars argument is greater than 99,
                 // the text it generates can have new lines which are ignored by non-textarea inputs
@@ -57,45 +70,43 @@ class ColumnTypeGuesser
                     $size = 99;
                 }
 
-                return function () use ($size, $column, $tableName) {
+                return function () use ($size) {
                     if ($size >= 5) {
                         return $this->generator->text($size);
                     }
 
-                    $columnName = "$tableName.{$column->getName()}";
-
-                    throw new \InvalidArgumentException(
-                        "$columnName is a string shorter than 5 characters,"
-                        ." but Faker's text() can only generate text of at least 5 characters.".PHP_EOL
-                        ."Please specify a more accurate formatter for $columnName."
-                    );
-
-                    // Of course we could just use str_random($size) here,
-                    // but for the CHAR columns for which I got this error
-                    // I found that it was better to specify a more precise formatter anyway,
-                    // e.g. $faker->countryCode for sender_country.
+                    return Str::random($size);
                 };
 
             case 'text':
                 return fn () => $this->generator->text();
 
-            case 'guid':
+            case 'uuid':
                 return fn () => $this->generator->uuid();
 
             case 'date':
             case 'datetime':
             case 'datetimetz':
+            case 'timestamp':
                 return fn () => $this->generator->datetime();
 
             case 'time':
                 return fn () => $this->generator->time();
 
-            case 'boolean':
-                return fn () => $this->generator->boolean();
-                // Unfortunately Doctrine maps all TINYINT to BooleanType.
+            case 'tinyint':
+                if ($column['type'] === 'tinyint(1)') {
+                    return fn () => $this->generator->boolean();
+                }
+
+                return fn () => rand(0, 127);
+
             case 'json':
             case 'json_array':
+            case 'longtext': // MariaDB
                 return fn () => json_encode([$this->generator->word() => $this->generator->word()]);
+
+            case 'enum':
+                return fn () => Arr::random(explode(',', str_replace("'", '', substr($column['type'], 5, -1))));
 
             default:
                 return null;

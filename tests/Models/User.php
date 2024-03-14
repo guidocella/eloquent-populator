@@ -4,8 +4,6 @@ namespace GuidoCella\EloquentPopulator\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-// use GuidoCella\Multilingual\Translatable;
-
 class User extends Model
 {
     public function company()

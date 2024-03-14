@@ -3,14 +3,12 @@
 namespace GuidoCella\EloquentPopulator;
 
 use Faker\Generator;
-use Faker\Guesser\Name;
 use GuidoCella\Multilingual\Translatable;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class ModelPopulator
 {
@@ -18,67 +16,16 @@ class ModelPopulator
 
     protected Generator $generator;
 
-    /**
-     * @var \Doctrine\DBAL\Schema\Column[]
-     */
     protected array $columns = [];
 
     public function __construct(string $modelClass)
     {
         $this->model = new $modelClass();
         $this->generator = Container::getInstance()->make(Generator::class);
-        $this->setColumns();
-    }
-
-    protected function setColumns(): void
-    {
-        $schema = $this->model->getConnection()->getDoctrineSchemaManager();
-        $platform = $schema->getDatabasePlatform();
-
-        // Prevent a DBALException if the table contains an enum.
-        $platform->registerDoctrineTypeMapping('enum', 'string');
-
-        [$table, $database] = $this->getTableAndDatabase();
-
-        $this->columns = $this->model->getConnection()->getDoctrineConnection()->fetchAllAssociative(
-            $platform->getListTableColumnsSQL($table, $database)
+        $this->columns = array_filter(
+            $this->model->getConnection()->getSchemaBuilder()->getColumns($this->model->getTable()),
+            fn ($column) => $column['generation'] === null, // filter out virtual columns
         );
-
-        $this->rejectVirtualColumns();
-
-        $columns = $this->columns;
-        $this->columns = (fn () => $this->_getPortableTableColumnList($table, $database, $columns))->call($schema);
-
-        $this->unquoteColumnNames($platform->getIdentifierQuoteCharacter());
-    }
-
-    protected function getTableAndDatabase(): array
-    {
-        $table = $this->model->getConnection()->getTablePrefix().$this->model->getTable();
-
-        if (strpos($table, '.')) {
-            [$database, $table] = explode('.', $table);
-        }
-
-        return [$table, $database ?? null];
-    }
-
-    // For MySql and MariaDB
-    protected function rejectVirtualColumns()
-    {
-        $this->columns = array_filter($this->columns, fn ($column) => !isset($column['Extra']) || !Str::contains($column['Extra'], 'VIRTUAL'));
-    }
-
-    /**
-     * Unquote column names that have been quoted by Doctrine because they are reserved keywords.
-     */
-    protected function unquoteColumnNames(string $quoteCharacter): void
-    {
-        foreach ($this->columns as $columnName => $columnData) {
-            if (Str::startsWith($columnName, $quoteCharacter)) {
-                $this->columns[substr($columnName, 1, -1)] = Arr::pull($this->columns, $columnName);
-            }
-        }
     }
 
     public function guessFormatters(): array
@@ -88,41 +35,35 @@ class ModelPopulator
         $nameGuesser = new Name($this->generator);
         $columnTypeGuesser = new ColumnTypeGuesser($this->generator);
 
-        foreach ($this->columns as $columnName => $column) {
-            if ($columnName === $this->model->getKeyName() && $column->getAutoincrement()) {
+        foreach ($this->columns as $column) {
+            if ($column['name'] === $this->model->getKeyName() && $column['auto_increment']) {
                 continue;
             }
 
             if (
                 method_exists($this->model, 'getDeletedAtColumn')
-                && $columnName === $this->model->getDeletedAtColumn()
+                && $column['name'] === $this->model->getDeletedAtColumn()
             ) {
                 continue;
             }
 
             if (
                 !Populator::$seeding
-                && in_array($columnName, [$this->model->getCreatedAtColumn(), $this->model->getUpdatedAtColumn()])
+                && in_array($column['name'], [$this->model->getCreatedAtColumn(), $this->model->getUpdatedAtColumn()])
             ) {
                 continue;
             }
 
-            $formatter = $nameGuesser->guessFormat(
-                $columnName,
-                $column->getLength()
-            ) ?? $columnTypeGuesser->guessFormat(
-                $column,
-                $this->model->getTable()
-            );
+            $formatter = $nameGuesser->guessFormat($column) ?? $columnTypeGuesser->guessFormat($column);
 
             if (!$formatter) {
                 continue;
             }
 
-            if ($column->getNotnull() || !Populator::$seeding) {
-                $formatters[$columnName] = $formatter;
+            if (!$column['nullable'] || !Populator::$seeding) {
+                $formatters[$column['name']] = $formatter;
             } else {
-                $formatters[$columnName] = fn () => rand(0, 1) ? $formatter() : null;
+                $formatters[$column['name']] = fn () => rand(0, 1) ? $formatter() : null;
             }
         }
 
@@ -190,11 +131,12 @@ class ModelPopulator
     {
         $relatedClass = get_class($relation->getRelated());
         $foreignKey = $relation->getForeignKeyName();
+        $foreignKeyColumn = Arr::first($this->columns, fn ($column) => $column['name'] === $foreignKey);
 
         // Ignore dynamic relations in which the foreign key is selected with a subquery.
         // https://reinink.ca/articles/dynamic-relationships-in-laravel-using-subqueries
         // (superseded by Has One Of Many relationships)
-        if (!isset($this->columns[$foreignKey])) {
+        if (!$foreignKeyColumn) {
             return;
         }
 
@@ -214,7 +156,7 @@ class ModelPopulator
 
         $relatedFactory = $relatedFactoryClass::new();
 
-        if ($this->columns[$foreignKey]->getNotnull() || !Populator::$seeding) {
+        if (!$foreignKeyColumn['nullable'] || !Populator::$seeding) {
             $formatters[$foreignKey] = $relatedFactory;
         } else {
             $formatters[$foreignKey] = fn () => rand(0, 1) ? $relatedFactory : null;

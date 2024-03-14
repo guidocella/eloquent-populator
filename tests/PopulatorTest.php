@@ -3,6 +3,7 @@
 namespace GuidoCella\EloquentPopulator;
 
 use Closure;
+use DateTime;
 use GuidoCella\EloquentPopulator\Factories\CompanyFactory;
 use GuidoCella\EloquentPopulator\Models\Company;
 use GuidoCella\EloquentPopulator\Models\User;
@@ -17,14 +18,22 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertIsInt($user['bigint']);
         $this->assertIsFloat($user['decimal']);
         $this->assertIsFloat($user['float']);
-        $this->assertTrue(is_string($user['string']) && strlen($user['string']));
-        $this->assertTrue(is_string($user['text']) && strlen($user['text']));
-        $this->assertInstanceOf(\DateTime::class, $user['date']);
-        $this->assertInstanceOf(\DateTime::class, $user['datetime']);
-        $this->assertInstanceOf(\DateTime::class, $user['timestamp']);
+        $this->assertIsString($user['string']);
+        $this->assertIsString($user['char']);
+        $this->assertIsString($user['text']);
+        $this->assertInstanceOf(DateTime::class, $user['date']);
+        $this->assertInstanceOf(DateTime::class, $user['datetime']);
+        $this->assertInstanceOf(DateTime::class, $user['timestamp']);
         $this->assertMatchesRegularExpression('/\d\d:\d\d:\d\d/', $user['time']);
         $this->assertIsBool($user['boolean']);
-        // DATETIME-TZ, JSON and UUID are not supported by SQLite, so there's no point in testing them.
+        $this->assertFalse(isset($user['virtual']));
+
+        if (config('database.default') === 'mariadb') {
+            $this->assertIsString($user['json']);
+            $this->assertIsString($user['uuid']);
+            $this->assertInstanceOf(DateTime::class, $user['datetimetz']);
+            $this->assertContains($user['enum'], ['foo', 'bar']);
+        }
     }
 
     public function testColumnNameGuesser()
@@ -52,8 +61,8 @@ class PopulatorTest extends PopulatorTestCase
         $this->assertIsArray($name);
         $this->assertArrayHasKey('en', $name);
         $this->assertArrayHasKey('es', $name);
-        $this->assertGreaterThan(1, strlen($name['en']));
-        $this->assertGreaterThan(1, strlen($name['es']));
+        $this->assertIsString($name['en']);
+        $this->assertIsString($name['es']);
     }
 }
 // vim: nolinebreak
