@@ -2,10 +2,15 @@
     "name": "guidocella/eloquent-populator",
     "type": "library",
     "description": "Guess attributes for Eloquent model factories",
-    "keywords": ["laravel", "eloquent", "database", "faker"],
+    "keywords": [
+        "laravel",
+        "eloquent",
+        "database",
+        "faker"
+    ],
     "license": "MIT",
     "require": {
-        "illuminate/database": "^11",
+        "illuminate/database": "^11|^12.0",
         "fakerphp/faker": "^1"
     },
     "require-dev": {
