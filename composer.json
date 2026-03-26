@@ -5,12 +5,12 @@
     "keywords": ["laravel", "eloquent", "database", "faker"],
     "license": "MIT",
     "require": {
-        "illuminate/database": "^12",
+        "illuminate/database": "^13",
         "fakerphp/faker": "^1"
     },
     "require-dev": {
         "guidocella/laravel-multilingual": "*",
-        "laravel/laravel": "^12",
+        "laravel/laravel": "^13",
         "phpunit/phpunit": "^13"
     },
     "autoload": {
