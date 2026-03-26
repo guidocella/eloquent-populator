@@ -11,7 +11,7 @@
     "require-dev": {
         "guidocella/laravel-multilingual": "*",
         "laravel/laravel": "^12",
-        "phpunit/phpunit": "^12"
+        "phpunit/phpunit": "^13"
     },
     "autoload": {
         "psr-4": {
